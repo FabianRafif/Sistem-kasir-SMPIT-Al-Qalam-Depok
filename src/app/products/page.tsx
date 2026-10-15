@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import AppLayout from '@/components/layout/AppLayout';
 import {
   Package,
   Search,
   Plus,
+  FolderTree,
   FileSpreadsheet,
   Download,
   Barcode as BarcodeIcon,
@@ -170,6 +172,13 @@ export default function ProductsPage() {
               <Plus className="w-4 h-4" />
               <span>Tambah Produk Baru</span>
             </button>
+            <Link
+              href="/categories"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-xs font-bold border border-brand-200 transition-colors"
+            >
+              <FolderTree className="w-4 h-4" />
+              <span>Kelola Kategori</span>
+            </Link>
             <button
               onClick={() => setShowImportModal(true)}
               className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors"
@@ -347,6 +356,16 @@ export default function ProductsPage() {
                             <BarcodeIcon className="w-4 h-4" />
                           </button>
 
+                          {/* Edit Produk & Kategori */}
+                          <button
+                            type="button"
+                            onClick={() => setEditingProduct(p)}
+                            className="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
+                            title="Edit Data & Kategori Produk"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+
                           {/* Toggle Aktif / Nonaktif */}
                           <button
                             type="button"
@@ -403,6 +422,20 @@ export default function ProductsPage() {
           onProductCreated={(newProd) => {
             showNotice('success', `Produk "${newProd.name}" berhasil ditambahkan.`);
             fetchProducts();
+            fetchCategories();
+          }}
+        />
+      )}
+
+      {/* MODAL EDIT DATA & KATEGORI PRODUK */}
+      {editingProduct && (
+        <QuickAddProductModal
+          initialProduct={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onProductUpdated={(updatedProd) => {
+            showNotice('success', `Produk "${updatedProd.name}" berhasil diperbarui.`);
+            fetchProducts();
+            fetchCategories();
           }}
         />
       )}

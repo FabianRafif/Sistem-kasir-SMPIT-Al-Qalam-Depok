@@ -15,7 +15,7 @@ async function main() {
       storeName: 'Kantin & Minimarket SMPIT Al Qalam',
       schoolName: 'SMPIT Al Qalam',
       address: 'Kompleks Pendidikan Islam Terpadu Al Qalam',
-      phone: '0812-3456-7890',
+      phone: '(021) 7755912',
       receiptFooter: 'Terima kasih telah berbelanja di Minimarket SMPIT Al Qalam.\nSemoga berkah & bermanfaat.',
       logoPath: '/logo-alqalam.png',
       timezone: 'Asia/Jakarta',

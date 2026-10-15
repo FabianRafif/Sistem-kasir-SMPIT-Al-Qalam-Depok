@@ -9,6 +9,7 @@ import {
   UserCheck,
   UserX,
   KeyRound,
+  Trash2,
   AlertCircle,
   CheckCircle,
   Loader2,
@@ -122,6 +123,33 @@ export default function UsersPage() {
       }
     } catch (err) {
       showNotice('error', 'Gagal memperbarui status akun.');
+    }
+  };
+
+  const handleDeleteUser = async (user: any) => {
+    if (
+      !window.confirm(
+        `Yakin ingin menghapus permanen akun "${user.name}" (@${user.username})? Tindakan ini tidak dapat dibatalkan.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/users?id=${user.id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        showNotice('error', data.error || 'Gagal menghapus akun pengguna.');
+        return;
+      }
+
+      showNotice('success', `Akun "${user.name}" berhasil dibuang permanen.`);
+      fetchUsers();
+    } catch (err: any) {
+      showNotice('error', err.message || 'Terjadi kesalahan sistem saat menghapus akun.');
     }
   };
 
@@ -274,6 +302,16 @@ export default function UsersPage() {
                           >
                             {u.isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                           </button>
+                          {!u.isActive && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(u)}
+                              className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
+                              title="Hapus / Buang Akun Nonaktif"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

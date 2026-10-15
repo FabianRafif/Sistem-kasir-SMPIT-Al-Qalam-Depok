@@ -10,7 +10,7 @@ describe('3. Aturan Transaksi & Struk Thermal', () => {
       storeName: 'Kantin & Minimarket SMPIT Al Qalam',
       schoolName: 'SMPIT Al Qalam',
       address: 'Komplek Perguruan Islam',
-      phone: '08123456789',
+      phone: '(021) 7755912',
       cashierName: 'KASIR01',
       date: '15/10/2026',
       time: '12:30:45',

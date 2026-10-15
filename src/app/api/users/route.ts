@@ -165,3 +165,89 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Gagal memperbarui pengguna.' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const user = await getCurrentUser();
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Hanya administrator yang berwenang menghapus pengguna.' },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(req.url);
+    let id = searchParams.get('id');
+    if (!id) {
+      try {
+        const body = await req.json();
+        id = body?.id;
+      } catch {}
+    }
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID Pengguna wajib disertakan.' }, { status: 400 });
+    }
+
+    // Tidak boleh menghapus akun sendiri yang sedang login
+    if (id === user.id) {
+      return NextResponse.json(
+        { error: 'Anda tidak dapat menghapus akun Anda sendiri saat sedang login.' },
+        { status: 400 }
+      );
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { sales: true, shifts: true, stockMovements: true },
+        },
+      },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json({ error: 'Pengguna tidak ditemukan.' }, { status: 404 });
+    }
+
+    // Proteksi jika akun memiliki riwayat transaksi penjualan riil
+    if (targetUser._count.sales > 0) {
+      return NextResponse.json(
+        {
+          error: `Akun "${targetUser.name}" tidak dapat dihapus permanen karena memiliki riwayat ${targetUser._count.sales} transaksi penjualan. Anda dapat tetap menonaktifkannya.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Putuskan relasi audit log sebelum menghapus
+    await prisma.auditLog.updateMany({
+      where: { userId: id },
+      data: { userId: null },
+    });
+
+    await prisma.user.delete({
+      where: { id },
+    });
+
+    await logAudit({
+      userId: user.id,
+      action: 'USER_DELETE',
+      entityType: 'USER',
+      entityId: id,
+      details: { username: targetUser.username, name: targetUser.name },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Akun pengguna "${targetUser.name}" berhasil dihapus permanen.`,
+    });
+  } catch (error: any) {
+    console.error('Delete user error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Gagal menghapus pengguna.' },
+      { status: 500 }
+    );
+  }
+}
+

@@ -203,7 +203,7 @@ export default function SettingsPage() {
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="0812-3456-7890"
+                placeholder="(021) 7755912"
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-500"
               />
             </div>

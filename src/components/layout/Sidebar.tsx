@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
+  FolderTree,
   Boxes,
   Receipt,
   BarChart3,
@@ -58,6 +59,12 @@ export default function Sidebar({ user, isOpen = false, onClose }: SidebarProps)
       href: '/products',
       icon: Package,
       roles: ['ADMIN', 'CASHIER'],
+    },
+    {
+      label: 'Kategori Produk',
+      href: '/categories',
+      icon: FolderTree,
+      roles: ['ADMIN'],
     },
     {
       label: 'Inventaris & Stok',

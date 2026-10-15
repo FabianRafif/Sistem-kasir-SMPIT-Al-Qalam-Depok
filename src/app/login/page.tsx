@@ -45,12 +45,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoFill = (u: string, p: string) => {
-    setUsername(u);
-    setPassword(p);
-    setErrorMessage('');
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200 flex flex-col justify-center items-center p-4 select-none">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden">
@@ -147,29 +141,11 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Akun Demo Pengujian untuk Pihak Sekolah */}
-          <div className="mt-6 pt-5 border-t border-slate-100">
-            <span className="block text-center text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-              Akun Pengujian Demo Sekolah
-            </span>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <button
-                type="button"
-                onClick={() => handleDemoFill('admin', 'AdminAlQalam2026!')}
-                className="p-2 bg-slate-50 hover:bg-brand-50 text-slate-700 hover:text-brand-700 border border-slate-200 hover:border-brand-200 rounded-lg text-left transition-colors font-medium"
-              >
-                <div className="font-bold text-slate-900">Administrator</div>
-                <div className="text-[10px] text-slate-500 font-mono">admin</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoFill('kasir1', 'KasirAlQalam2026!')}
-                className="p-2 bg-slate-50 hover:bg-brand-50 text-slate-700 hover:text-brand-700 border border-slate-200 hover:border-brand-200 rounded-lg text-left transition-colors font-medium"
-              >
-                <div className="font-bold text-slate-900">Kasir Toko 1</div>
-                <div className="text-[10px] text-slate-500 font-mono">kasir1</div>
-              </button>
-            </div>
+          {/* Petunjuk Akses Resmi */}
+          <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+            <p className="text-xs text-slate-500 font-medium">
+              Gunakan akun yang telah didaftarkan oleh Administrator untuk mengakses sistem kasir dan manajemen produk.
+            </p>
           </div>
         </div>
 
