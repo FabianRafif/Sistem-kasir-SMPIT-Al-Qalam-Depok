@@ -56,14 +56,15 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200/80 overflow-hidden">
         {/* Header Visual Identitas SMPIT Al Qalam */}
         <div className="bg-brand-500 pt-8 pb-7 px-6 text-center text-white relative">
-          <div className="w-20 h-20 mx-auto bg-white rounded-2xl p-2 shadow-lg flex items-center justify-center border-2 border-brand-200 mb-3">
+          <div className="w-24 h-24 mx-auto bg-white rounded-2xl p-2.5 shadow-lg flex items-center justify-center border-2 border-brand-200 mb-3 overflow-hidden">
             <Image
               src="/logo-alqalam.png"
               alt="Logo Resmi SMPIT Al Qalam"
-              width={70}
-              height={70}
+              width={240}
+              height={240}
+              unoptimized
               priority
-              className="object-contain"
+              className="w-full h-full object-contain"
             />
           </div>
           <h1 className="text-xl font-black tracking-tight leading-snug">

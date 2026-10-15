@@ -111,14 +111,15 @@ export default function Sidebar({ user, isOpen = false, onClose }: SidebarProps)
         {/* Brand & Logo Resmi SMPIT Al Qalam */}
         <div className="p-4 border-b border-slate-200 flex items-center justify-between gap-2 bg-slate-50/50">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="relative w-11 h-11 flex-shrink-0 bg-white rounded-lg p-1 shadow-sm border border-slate-200 flex items-center justify-center">
+            <div className="relative w-12 h-12 flex-shrink-0 bg-white rounded-xl p-1 shadow-xs border border-slate-200/90 flex items-center justify-center overflow-hidden">
               <Image
                 src="/logo-alqalam.png"
                 alt="Logo SMPIT Al Qalam"
-                width={40}
-                height={40}
+                width={160}
+                height={160}
+                unoptimized
                 priority
-                className="object-contain"
+                className="w-full h-full object-contain"
               />
             </div>
             <div className="flex flex-col overflow-hidden">

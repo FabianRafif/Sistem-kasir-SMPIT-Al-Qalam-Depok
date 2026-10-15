@@ -149,13 +149,14 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50/70 border border-slate-200 rounded-xl">
-            <div className="relative w-20 h-20 bg-white rounded-xl p-2 shadow-xs border border-slate-200 flex items-center justify-center flex-shrink-0">
+            <div className="relative w-24 h-24 bg-white rounded-2xl p-2 shadow-xs border border-slate-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
               <Image
                 src={logoPath || '/logo-alqalam.png'}
                 alt="Logo SMPIT Al Qalam"
-                width={70}
-                height={70}
-                className="object-contain"
+                width={240}
+                height={240}
+                unoptimized
+                className="w-full h-full object-contain"
               />
             </div>
             <div>

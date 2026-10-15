@@ -69,13 +69,14 @@ export default function ThermalReceipt({ receipt, onClose, autoPrint = false }: 
           >
             {/* Header Toko */}
             <div className="text-center mb-2">
-              <div className="w-10 h-10 mx-auto mb-1 relative flex items-center justify-center">
+              <div className="w-12 h-12 mx-auto mb-1 relative flex items-center justify-center">
                 <Image
                   src="/logo-alqalam.png"
                   alt="Logo SMPIT Al Qalam"
-                  width={38}
-                  height={38}
-                  className="object-contain filter grayscale contrast-200"
+                  width={80}
+                  height={80}
+                  unoptimized
+                  className="w-full h-full object-contain filter grayscale contrast-200"
                 />
               </div>
               <p className="font-bold text-[13px] tracking-wide">{receipt.schoolName.toUpperCase()}</p>
