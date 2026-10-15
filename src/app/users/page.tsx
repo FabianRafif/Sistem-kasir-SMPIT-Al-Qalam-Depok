@@ -206,7 +206,7 @@ export default function UsersPage() {
                 <span className="text-xs font-semibold">Memuat daftar pengguna...</span>
               </div>
             ) : (
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs border-collapse min-w-[650px]">
                 <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-4">Nama Lengkap</th>

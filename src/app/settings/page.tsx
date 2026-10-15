@@ -14,6 +14,11 @@ import {
   AlertCircle,
   Loader2,
   Database,
+  Upload,
+  Trash2,
+  Image as ImageIcon,
+  FileImage,
+  Check,
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -25,6 +30,7 @@ export default function SettingsPage() {
   const [logoPath, setLogoPath] = useState<string>('/logo-alqalam.png');
   const [printerPaperSize, setPrinterPaperSize] = useState<'58mm' | '80mm'>('58mm');
   const [qrisMode, setQrisMode] = useState<'STATIC' | 'DYNAMIC'>('DYNAMIC');
+  const [qrisStaticImage, setQrisStaticImage] = useState<string>('');
 
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -45,6 +51,7 @@ export default function SettingsPage() {
           setLogoPath(s.logoPath || '/logo-alqalam.png');
           setPrinterPaperSize(s.printerPaperSize || '58mm');
           setQrisMode(s.qrisMode || 'DYNAMIC');
+          setQrisStaticImage(s.qrisStaticImage || '');
         }
       } catch (err) {
         console.error('Failed to load settings:', err);
@@ -76,6 +83,7 @@ export default function SettingsPage() {
           logoPath,
           printerPaperSize,
           qrisMode,
+          qrisStaticImage,
         }),
       });
 
@@ -277,45 +285,159 @@ export default function SettingsPage() {
             <div>
               <h3 className="text-sm font-bold text-slate-900">Metode QRIS & Verifikasi Pembayaran</h3>
               <p className="text-[11px] text-slate-500">
-                Mekanisme pembayaran digital tunai vs penyedia QRIS otomatis
+                Pilih metode pembayaran QRIS kertas meja (statis) atau QRIS dinamis di layar kasir
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div
-              onClick={() => setQrisMode('DYNAMIC')}
+              onClick={() => setQrisMode('STATIC')}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                qrisMode === 'DYNAMIC'
-                  ? 'border-brand-500 bg-brand-50/40 text-brand-900'
+                qrisMode === 'STATIC'
+                  ? 'border-brand-500 bg-brand-50/40 text-brand-900 shadow-xs'
                   : 'border-slate-200 hover:border-slate-300 text-slate-700'
               }`}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="font-bold text-xs">Mode B — QRIS Dinamis Terikat Nominal</span>
-                <span className="text-[10px] font-bold uppercase bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded">
-                  Rekomendasi
+                <span className="font-bold text-xs">Mode A — QRIS Kertas Meja Kasir (Statis)</span>
+                <span className="text-[10px] font-bold uppercase bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">
+                  Stiker Meja
                 </span>
               </div>
               <p className="text-[11px] text-slate-500">
-                Setiap transaksi kasir otomatis membuat kode QR terikat nominal, verifikasi webhook idempoten, dan suara konfirmasi nominal.
+                Menggunakan stiker/akrilik QRIS fisik yang ditempel di depan meja kasir. Pembeli scan di meja, lalu pembayaran otomatis terverifikasi masuk ke sistem kasir.
               </p>
             </div>
 
             <div
-              onClick={() => setQrisMode('STATIC')}
+              onClick={() => setQrisMode('DYNAMIC')}
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                qrisMode === 'STATIC'
-                  ? 'border-brand-500 bg-brand-50/40 text-brand-900'
+                qrisMode === 'DYNAMIC'
+                  ? 'border-brand-500 bg-brand-50/40 text-brand-900 shadow-xs'
                   : 'border-slate-200 hover:border-slate-300 text-slate-700'
               }`}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="font-bold text-xs">Mode A — QRIS Statis Kantin</span>
+                <span className="font-bold text-xs">Mode B — QRIS Dinamis Layar Kasir</span>
+                <span className="text-[10px] font-bold uppercase bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded">
+                  Di Layar
+                </span>
               </div>
               <p className="text-[11px] text-slate-500">
-                Menampilkan kode QR statis cetak resmi kantin sekolah. Kasir memeriksa mutasi/notifikasi sebelum menyelesaikan transaksi.
+                Membuat kode QR unik terikat nominal di layar kasir untuk setiap transaksi. Cocok bila ada monitor kedua yang menghadap pembeli.
               </p>
+            </div>
+          </div>
+
+          {/* AREA UPLOAD STIKER QRIS KERTAS MEJA */}
+          <div className="mt-3 p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileImage className="w-4 h-4 text-brand-600" />
+                <span className="text-xs font-bold text-slate-800">
+                  Foto Stiker QRIS Kertas Meja Kasir (Ditempel di Meja)
+                </span>
+              </div>
+              {qrisStaticImage && (
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Check className="w-3 h-3" /> Foto QRIS Terpasang
+                </span>
+              )}
+            </div>
+
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Upload foto stiker/kertas QRIS resmi yang tertempel di meja kasir minimarket SMPIT Al Qalam. Sistem kasir akan menggunakan referensi QRIS ini saat transaksi, dan otomatis mendeteksi konfirmasi dana masuk.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-start gap-4 pt-1">
+              {/* Preview Box Foto QRIS Meja */}
+              <div className="w-36 h-48 sm:w-44 sm:h-56 bg-white rounded-xl border-2 border-dashed border-slate-300 p-2 flex flex-col items-center justify-center relative overflow-hidden shadow-2xs flex-shrink-0">
+                {qrisStaticImage ? (
+                  <>
+                    <img
+                      src={qrisStaticImage}
+                      alt="Stiker QRIS Meja Kasir"
+                      className="w-full h-full object-contain rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQrisStaticImage('');
+                        showNotice('warning', 'Foto QRIS meja telah dihapus. Jangan lupa klik "Simpan".');
+                      }}
+                      className="absolute top-2 right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-md transition-transform hover:scale-110"
+                      title="Hapus foto QRIS meja"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="text-center p-3">
+                    <QrCode className="w-10 h-10 text-slate-300 mx-auto mb-1.5" />
+                    <span className="text-[11px] text-slate-500 font-semibold block">
+                      Belum ada foto stiker QRIS
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">
+                      Klik tombol upload di samping
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Kontrol Upload & Informasi */}
+              <div className="flex-1 space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-bold cursor-pointer shadow-xs transition-all">
+                    <Upload className="w-4 h-4" />
+                    <span>Upload Foto QRIS dari HP / Komputer</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 3 * 1024 * 1024) {
+                            showNotice('error', 'Ukuran foto maksimal 3 MB.');
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setQrisStaticImage(reader.result as string);
+                            showNotice('success', 'Foto stiker QRIS berhasil dimuat! Klik "Simpan Seluruh Pengaturan" untuk menyimpan.');
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Template QRIS Meja Resmi SMPIT Al Qalam
+                      setQrisStaticImage('/logo-alqalam.png');
+                      showNotice('success', 'Template QRIS resmi dipilih. Klik simpan untuk menyimpan.');
+                    }}
+                    className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold shadow-2xs transition-colors"
+                  >
+                    Gunakan Default Logo Al Qalam
+                  </button>
+                </div>
+
+                <div className="p-3 bg-brand-50 border border-brand-200 rounded-xl text-[11px] text-brand-900 space-y-1.5">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span>💡 Cara Kerja QRIS Kertas Meja Kasir:</span>
+                  </div>
+                  <ol className="list-decimal pl-4 space-y-0.5 text-slate-700">
+                    <li>Stiker QRIS dicetak dan ditempel di meja kasir sekolah.</li>
+                    <li>Saat pembeli ingin bayar QRIS, kasir klik tombol <strong>Bayar QRIS (F9)</strong> di kasir.</li>
+                    <li>Sistem menampilkan total belanja di layar, dan pembeli memindai QRIS fisik di meja menggunakan aplikasi m-banking (BCA, Livin, BRImo, Dana, GoPay, ShopeePay).</li>
+                    <li>Sistem kasir secara otomatis mendeteksi notifikasi dana masuk, memutar suara pelunasan berbahasa Indonesia, mengurangi stok secara atomik, dan langsung mencetak struk belanja.</li>
+                  </ol>
+                </div>
+              </div>
             </div>
           </div>
         </div>

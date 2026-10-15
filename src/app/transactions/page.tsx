@@ -40,8 +40,8 @@ export default function TransactionsPage() {
 
   const [notification, setNotification] = useState<{ type: string; message: string } | null>(null);
 
-  const fetchTransactions = useCallback(async () => {
-    setLoading(true);
+  const fetchTransactions = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -63,12 +63,25 @@ export default function TransactionsPage() {
     } catch (err) {
       console.error('Failed to load transactions:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [page, searchReceipt, paymentMethod, paymentStatus, dateFrom, dateTo]);
 
   useEffect(() => {
     fetchTransactions();
+
+    // Auto-polling real-time setiap 5 detik secara silent (latar belakang tanpa mereset UI/spinner)
+    const interval = setInterval(() => {
+      fetchTransactions(true);
+    }, 5000);
+
+    const handleFocus = () => fetchTransactions(true);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [fetchTransactions]);
 
   const showNotice = (type: string, message: string) => {
@@ -233,7 +246,7 @@ export default function TransactionsPage() {
                 <span className="text-xs font-semibold">Tidak ada transaksi ditemukan.</span>
               </div>
             ) : (
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs border-collapse min-w-[760px]">
                 <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-4">No Struk</th>
@@ -361,8 +374,8 @@ export default function TransactionsPage() {
       {/* MODAL DETAIL TRANSAKSI */}
       {selectedTxDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden my-auto">
-            <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden my-auto max-h-[92vh] flex flex-col">
+            <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between flex-shrink-0">
               <div>
                 <h3 className="text-sm font-bold">Detail Struk #{selectedTxDetail.receiptNumber}</h3>
                 <p className="text-[11px] text-slate-400">
@@ -377,7 +390,7 @@ export default function TransactionsPage() {
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
+            <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
               <div className="border border-slate-200 rounded-xl overflow-hidden max-h-56 overflow-y-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">

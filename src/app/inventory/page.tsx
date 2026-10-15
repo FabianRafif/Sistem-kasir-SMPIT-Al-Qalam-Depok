@@ -39,8 +39,8 @@ export default function InventoryPage() {
   const [modalError, setModalError] = useState<string>('');
   const [notification, setNotification] = useState<{ type: string; message: string } | null>(null);
 
-  const fetchMovements = useCallback(async () => {
-    setLoading(true);
+  const fetchMovements = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -58,7 +58,7 @@ export default function InventoryPage() {
     } catch (err) {
       console.error('Error loading inventory:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [page, movementTypeFilter]);
 
@@ -81,6 +81,19 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchMovements();
+    // Sinkronisasi mutasi stok realtime antar-perangkat kasir secara silent (6 detik & on focus)
+    const interval = setInterval(() => {
+      fetchMovements(true);
+    }, 6000);
+    const handleFocus = () => {
+      fetchMovements(true);
+      fetchProductsList();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [fetchMovements]);
 
   const showNotice = (type: string, message: string) => {
@@ -193,13 +206,13 @@ export default function InventoryPage() {
         </div>
 
         {/* FILTER MUTASI STOK */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <History className="w-4 h-4 text-slate-500" />
             <h3 className="text-xs font-bold text-slate-800">Riwayat Mutasi Stok (Audit Trail)</h3>
           </div>
 
-          <div className="w-56">
+          <div className="w-full sm:w-56">
             <select
               value={movementTypeFilter}
               onChange={(e) => {
@@ -233,7 +246,7 @@ export default function InventoryPage() {
                 <span className="text-xs font-semibold">Belum ada mutasi stok tercatat.</span>
               </div>
             ) : (
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs border-collapse min-w-[700px]">
                 <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-4">Waktu (WIB)</th>

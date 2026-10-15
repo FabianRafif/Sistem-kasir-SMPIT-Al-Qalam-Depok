@@ -107,8 +107,8 @@ export default function QuickAddProductModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden my-auto">
-        <div className="px-5 py-3.5 bg-brand-500 text-white flex items-center justify-between">
+      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden my-auto max-h-[92vh] flex flex-col">
+        <div className="px-5 py-3.5 bg-brand-500 text-white flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             <Plus className="w-5 h-5" />
             <div>
@@ -124,7 +124,7 @@ export default function QuickAddProductModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
           {error && (
             <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />

@@ -106,35 +106,35 @@ export default function ReportsPage() {
             </button>
 
             {period === 'custom' && (
-              <div className="flex items-center gap-2 pl-2">
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto pt-2 sm:pt-0">
                 <input
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="px-2 py-1 text-xs border rounded bg-white"
+                  className="px-2 py-1.5 text-xs border border-slate-300 rounded bg-white flex-1 sm:flex-initial"
                 />
                 <span className="text-xs text-slate-400">s/d</span>
                 <input
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="px-2 py-1 text-xs border rounded bg-white"
+                  className="px-2 py-1.5 text-xs border border-slate-300 rounded bg-white flex-1 sm:flex-initial"
                 />
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors"
             >
               <Download className="w-4 h-4 text-emerald-600" />
-              <span>Export CSV (Aman Formula)</span>
+              <span>Export CSV</span>
             </button>
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors"
             >
               <Printer className="w-4 h-4 text-brand-600" />
               <span>Cetak Laporan</span>
@@ -261,39 +261,41 @@ export default function ReportsPage() {
                   Tidak ada data penjualan pada rentang periode ini.
                 </div>
               ) : (
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-200">
-                    <tr>
-                      <th className="py-2.5 px-4 w-12 text-center">No</th>
-                      <th className="py-2.5 px-4">Nama Produk</th>
-                      <th className="py-2.5 px-4 text-center">Jumlah Terjual</th>
-                      <th className="py-2.5 px-4 text-right">Kontribusi Omzet</th>
-                      <th className="py-2.5 px-4 text-right">Estimasi Laba Kotor</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {topProducts.map((p: any, idx: number) => {
-                      const grossMargin = p.revenue - p.cogs;
-                      return (
-                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                          <td className="py-2.5 px-4 text-center font-mono font-bold text-slate-400">
-                            {idx + 1}
-                          </td>
-                          <td className="py-2.5 px-4 font-semibold text-slate-800">{p.name}</td>
-                          <td className="py-2.5 px-4 text-center font-mono font-bold text-slate-900">
-                            {p.quantity} unit
-                          </td>
-                          <td className="py-2.5 px-4 text-right font-mono text-slate-800">
-                            {formatRupiah(p.revenue)}
-                          </td>
-                          <td className="py-2.5 px-4 text-right font-mono font-bold text-emerald-700">
-                            {formatRupiah(grossMargin)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse min-w-[640px]">
+                    <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-200">
+                      <tr>
+                        <th className="py-2.5 px-4 w-12 text-center">No</th>
+                        <th className="py-2.5 px-4">Nama Produk</th>
+                        <th className="py-2.5 px-4 text-center">Jumlah Terjual</th>
+                        <th className="py-2.5 px-4 text-right">Kontribusi Omzet</th>
+                        <th className="py-2.5 px-4 text-right">Estimasi Laba Kotor</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {topProducts.map((p: any, idx: number) => {
+                        const grossMargin = p.revenue - p.cogs;
+                        return (
+                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="py-2.5 px-4 text-center font-mono font-bold text-slate-400">
+                              {idx + 1}
+                            </td>
+                            <td className="py-2.5 px-4 font-semibold text-slate-800">{p.name}</td>
+                            <td className="py-2.5 px-4 text-center font-mono font-bold text-slate-900">
+                              {p.quantity} unit
+                            </td>
+                            <td className="py-2.5 px-4 text-right font-mono text-slate-800">
+                              {formatRupiah(p.revenue)}
+                            </td>
+                            <td className="py-2.5 px-4 text-right font-mono font-bold text-emerald-700">
+                              {formatRupiah(grossMargin)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>

@@ -24,10 +24,6 @@ export async function POST(req: NextRequest) {
     const amount = parseFloat(payload.amount || payload.gross_amount || 0);
     const statusCode = payload.status_code || payload.status; // 'SUCCESS' | 'SETTLEMENT' | 'PAID'
 
-    if (!saleId) {
-      return NextResponse.json({ error: 'Field saleId / order_id wajib disertakan.' }, { status: 400 });
-    }
-
     // 2. Hitung SHA-256 Hash Payload untuk audit dan pencegahan duplikasi
     const payloadHash = crypto.createHash('sha256').update(rawBody).digest('hex');
 
@@ -59,14 +55,42 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 5. Cari Penjualan Terkait
-    const sale = await prisma.sale.findUnique({
-      where: { id: saleId },
-      include: { items: true, payments: true },
-    });
+    // 5. Cari Penjualan Terkait (Berdasarkan ID Transaksi ATAU Nominal QRIS Meja Statis)
+    let sale = null;
+    if (saleId) {
+      sale = await prisma.sale.findFirst({
+        where: {
+          OR: [
+            { id: saleId },
+            { receiptNumber: saleId },
+            { payments: { some: { providerReference: saleId } } },
+          ],
+        },
+        include: { items: true, payments: true },
+      });
+    } else if (amount > 0) {
+      // Pencocokan Otomatis QRIS Meja Statis:
+      // Temukan transaksi kasir berstatus PENDING terbaru dengan nominal yang sesuai
+      sale = await prisma.sale.findFirst({
+        where: {
+          paymentMethod: 'QRIS',
+          paymentStatus: PaymentStatus.PENDING,
+          grandTotal: amount,
+          createdAt: {
+            gte: new Date(Date.now() - 30 * 60 * 1000), // Dalam rentang 30 menit terakhir
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        include: { items: true, payments: true },
+      });
+    }
 
     if (!sale) {
-      return NextResponse.json({ error: `Transaksi dengan ID "${saleId}" tidak ditemukan.` }, { status: 404 });
+      return NextResponse.json({
+        error: saleId
+          ? `Transaksi dengan ID "${saleId}" tidak ditemukan.`
+          : `Tidak ditemukan transaksi kasir QRIS pending dengan nominal Rp ${amount}.`,
+      }, { status: 404 });
     }
 
     // Cek apakah transaksi sudah berstatus PAID (misalnya webhook ganda atau sudah lunas)

@@ -23,7 +23,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    async function fetchDashboard() {
+    async function fetchDashboard(silent = false) {
       try {
         const res = await fetch('/api/dashboard');
         if (res.ok) {
@@ -33,10 +33,24 @@ export default function DashboardPage() {
       } catch (err) {
         console.error('Failed to load dashboard stats:', err);
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
     }
+
     fetchDashboard();
+
+    // Real-time synchronization: polling otomatis setiap 4 detik dari semua kasir/device
+    const interval = setInterval(() => {
+      fetchDashboard(true);
+    }, 4000);
+
+    const handleFocus = () => fetchDashboard(true);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   if (loading) {
@@ -201,7 +215,7 @@ export default function DashboardPage() {
                   Belum ada transaksi yang tercatat hari ini.
                 </div>
               ) : (
-                <table className="w-full text-left border-collapse text-xs">
+                <table className="w-full text-left border-collapse text-xs min-w-[500px]">
                   <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
                     <tr>
                       <th className="py-2.5 px-4">No Struk</th>

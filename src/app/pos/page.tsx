@@ -421,11 +421,11 @@ export default function PosPage() {
       title="Point of Sale (POS) Minimarket"
       subtitle="Scanner aktif otomatis (F1) • Cari produk (F2) • Bayar Tunai (F4) • Bayar QRIS (F9)"
     >
-      <div className="flex flex-col lg:flex-row gap-5 h-[calc(100vh-6.5rem)] select-none">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 min-h-0 lg:h-[calc(100vh-5.5rem)] select-none pb-20 lg:pb-0">
         {/* KOLOM KIRI: SCANNER, PENCARIAN & DAFTAR KERANJANG */}
         <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           {/* Bar Input Scanner & Pencarian */}
-          <div className="p-3.5 border-b border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row gap-3 items-stretch">
+          <div className="p-3 sm:p-3.5 border-b border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row gap-2.5 sm:gap-3 items-stretch">
             {/* Input Barcode Scanner USB (Auto-focus & Flex layout anti-tabrakan) */}
             <form
               onSubmit={handleBarcodeSubmit}
@@ -514,7 +514,7 @@ export default function PosPage() {
                 setUnregisteredBarcode('');
                 setShowAddProductModal(true);
               }}
-              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap border border-slate-200 transition-colors"
+              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 whitespace-nowrap border border-slate-200 transition-colors w-full sm:w-auto"
               title="Daftarkan produk baru yang belum tercatat di sistem"
             >
               <PackagePlus className="w-4 h-4 text-brand-600" />
@@ -553,9 +553,9 @@ export default function PosPage() {
           )}
 
           {/* Tabel Keranjang Belanja */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-[220px] max-h-[50vh] lg:max-h-none overflow-x-auto">
             {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center p-8 text-center text-slate-400">
+              <div className="h-full min-h-[220px] flex flex-col items-center justify-center p-8 text-center text-slate-400">
                 <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-3">
                   <Scan className="w-8 h-8 text-slate-300" />
                 </div>
@@ -565,36 +565,36 @@ export default function PosPage() {
                 </p>
               </div>
             ) : (
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-0">
                 <thead className="bg-slate-100/90 text-slate-600 text-[11px] uppercase tracking-wider font-semibold sticky top-0 z-10 border-b border-slate-200">
                   <tr>
-                    <th className="py-2.5 px-4 w-10 text-center">No</th>
-                    <th className="py-2.5 px-4">Nama Produk</th>
-                    <th className="py-2.5 px-4 text-right">Harga</th>
-                    <th className="py-2.5 px-4 text-center w-36">Jumlah</th>
-                    <th className="py-2.5 px-4 text-right">Subtotal</th>
-                    <th className="py-2.5 px-3 w-10 text-center">Aksi</th>
+                    <th className="py-2.5 px-3 sm:px-4 w-10 text-center">No</th>
+                    <th className="py-2.5 px-3 sm:px-4">Nama Produk</th>
+                    <th className="py-2.5 px-3 sm:px-4 text-right">Harga</th>
+                    <th className="py-2.5 px-3 sm:px-4 text-center w-36">Jumlah</th>
+                    <th className="py-2.5 px-3 sm:px-4 text-right">Subtotal</th>
+                    <th className="py-2.5 px-2 sm:px-3 w-10 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs">
                   {cart.map((item, index) => (
                     <tr key={item.productId} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-2.5 px-4 text-center font-mono text-slate-400">{index + 1}</td>
-                      <td className="py-2.5 px-4">
+                      <td className="py-2.5 px-3 sm:px-4 text-center font-mono text-slate-400">{index + 1}</td>
+                      <td className="py-2.5 px-3 sm:px-4">
                         <div className="font-bold text-slate-800">{item.name}</div>
                         <div className="text-[11px] text-slate-400 font-mono">
                           {item.barcode || item.sku} • {item.categoryName}
                         </div>
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-medium text-slate-700">
+                      <td className="py-2.5 px-3 sm:px-4 text-right font-mono font-medium text-slate-700">
                         {formatRupiah(item.unitPrice)}
                       </td>
-                      <td className="py-2.5 px-4 text-center">
+                      <td className="py-2.5 px-3 sm:px-4 text-center">
                         <div className="inline-flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white shadow-2xs">
                           <button
                             type="button"
                             onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                            className="p-1 hover:bg-slate-100 text-slate-600 transition-colors"
+                            className="w-7 h-7 hover:bg-slate-100 text-slate-600 transition-colors flex items-center justify-center flex-shrink-0"
                             title="Kurang 1"
                           >
                             <Minus className="w-3.5 h-3.5" />
@@ -607,22 +607,22 @@ export default function PosPage() {
                             onChange={(e) =>
                               updateQuantity(item.productId, parseInt(e.target.value) || 1)
                             }
-                            className="w-12 text-center text-xs font-mono font-bold text-slate-900 focus:outline-none py-1"
+                            className="w-11 text-center text-xs font-mono font-bold text-slate-900 focus:outline-none py-1"
                           />
                           <button
                             type="button"
                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                            className="p-1 hover:bg-slate-100 text-slate-600 transition-colors"
+                            className="w-7 h-7 hover:bg-slate-100 text-slate-600 transition-colors flex items-center justify-center flex-shrink-0"
                             title="Tambah 1"
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
-                      <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">
+                      <td className="py-2.5 px-3 sm:px-4 text-right font-mono font-bold text-slate-900">
                         {formatRupiah(item.lineTotal)}
                       </td>
-                      <td className="py-2.5 px-3 text-center">
+                      <td className="py-2.5 px-2 sm:px-3 text-center">
                         <button
                           type="button"
                           onClick={() => removeFromCart(item.productId)}
@@ -770,6 +770,38 @@ export default function PosPage() {
           </div>
         </div>
       </div>
+
+      {/* BAR PEMBAYARAN MENGAMBANG UNTUK TABLET & HP (< lg) */}
+      {cart.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 shadow-xl flex items-center justify-between gap-3 select-none">
+          <div className="min-w-0">
+            <span className="text-[10px] uppercase font-bold text-slate-500 block truncate">
+              Total ({totalItemsCount} item)
+            </span>
+            <span className="text-lg font-black font-mono text-slate-900 tracking-tight">
+              {formatRupiah(grandTotal)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowCashModal(true)}
+              className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-all"
+            >
+              <Banknote className="w-4 h-4" />
+              <span>Tunai</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleInitiateQris}
+              className="px-3.5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-all"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>QRIS</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* MODAL PEMBAYARAN TUNAI */}
       {showCashModal && (

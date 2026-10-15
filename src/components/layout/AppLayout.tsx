@@ -17,6 +17,7 @@ export default function AppLayout({ title, subtitle, children }: AppLayoutProps)
   const router = useRouter();
   const [user, setUser] = useState<UserSession | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   useEffect(() => {
     async function checkAuth() {
@@ -52,11 +53,15 @@ export default function AppLayout({ title, subtitle, children }: AppLayoutProps)
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
-      <Sidebar user={user} />
+    <div className="flex h-screen h-[100dvh] overflow-hidden bg-slate-50">
+      <Sidebar user={user} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header title={title} subtitle={subtitle} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <Header
+          title={title}
+          subtitle={subtitle}
+          onMenuClick={() => setSidebarOpen(true)}
+        />
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">{children}</main>
       </div>
     </div>
   );

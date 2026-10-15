@@ -44,8 +44,8 @@ export default function ProductsPage() {
 
   const [notification, setNotification] = useState<{ type: string; message: string } | null>(null);
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
+  const fetchProducts = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -68,7 +68,7 @@ export default function ProductsPage() {
     } catch (err) {
       console.error('Failed to load products:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [page, search, selectedCategory, stockFilter, statusFilter]);
 
@@ -90,6 +90,16 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
+    // Sinkronisasi realtime multi-perangkat kasir secara silent (6 detik & on focus)
+    const interval = setInterval(() => {
+      fetchProducts(true);
+    }, 6000);
+    const handleFocus = () => fetchProducts(true);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [fetchProducts]);
 
   const showNotice = (type: string, message: string) => {
@@ -151,32 +161,32 @@ export default function ProductsPage() {
         )}
 
         {/* TOOLBAR AKSI ATAS */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
             >
               <Plus className="w-4 h-4" />
               <span>Tambah Produk Baru</span>
             </button>
             <button
               onClick={() => setShowImportModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span>Import Excel/CSV</span>
+              <span>Import Excel</span>
             </button>
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition-colors"
             >
               <Download className="w-4 h-4 text-brand-600" />
               <span>Export CSV</span>
             </button>
           </div>
 
-          <div className="text-xs text-slate-500 font-medium">
+          <div className="text-xs text-slate-500 font-medium text-right sm:text-left">
             Total Terdaftar: <strong className="text-slate-800 font-bold">{totalCount}</strong> produk
           </div>
         </div>
@@ -267,7 +277,7 @@ export default function ProductsPage() {
                 </p>
               </div>
             ) : (
-              <table className="w-full text-left text-xs border-collapse">
+              <table className="w-full text-left text-xs border-collapse min-w-[700px]">
                 <thead className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-4">Nama Produk</th>

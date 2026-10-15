@@ -232,7 +232,7 @@ export async function POST(req: NextRequest) {
         };
       },
       {
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
         timeout: 10000,
       }
     );

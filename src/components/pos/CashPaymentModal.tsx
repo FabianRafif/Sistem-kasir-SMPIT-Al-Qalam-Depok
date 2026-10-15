@@ -189,19 +189,19 @@ export default function CashPaymentModal({
           </div>
 
           {/* Tombol Aksi */}
-          <div className="pt-3 flex items-center gap-3">
+          <div className="pt-3 flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={processing}
-              className="w-32 py-3 px-4 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors text-center flex-shrink-0"
+              className="w-full sm:w-32 py-3 px-4 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors text-center flex-shrink-0"
             >
               Batal (Esc)
             </button>
             <button
               type="submit"
               disabled={!isSufficient || processing}
-              className="flex-1 py-3 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap min-w-0"
+              className="flex-1 py-3 px-4 sm:px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap min-w-0"
             >
               {processing ? (
                 <>
