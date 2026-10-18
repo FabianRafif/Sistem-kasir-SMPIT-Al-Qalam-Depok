@@ -291,11 +291,28 @@ export default function QuickAddProductModal({
 
               {/* Form Input Tambah Kategori Baru Secara Instan */}
               {showAddCategory && (
-                <div className="mb-2 p-2.5 bg-brand-50/80 border border-brand-200 rounded-lg space-y-2">
-                  <div className="flex items-center gap-1.5">
+                <div className="mb-2.5 p-3 bg-brand-50/90 border border-brand-200 rounded-xl space-y-2.5 shadow-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] font-bold text-brand-900 flex items-center gap-1">
+                        <Plus className="w-3 h-3 text-brand-600" />
+                        Tambah Kategori Baru
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddCategory(false);
+                          setCategoryNotice('');
+                          setNewCategoryName('');
+                        }}
+                        className="text-[10px] text-slate-400 hover:text-slate-600 font-semibold transition-colors"
+                      >
+                        Batal
+                      </button>
+                    </div>
                     <input
                       type="text"
-                      placeholder="Nama kategori baru..."
+                      placeholder="Ketik nama kategori baru..."
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
                       onKeyDown={(e) => {
@@ -304,31 +321,40 @@ export default function QuickAddProductModal({
                           handleCreateCategoryInline();
                         }
                       }}
-                      className="flex-1 px-2.5 py-1.5 border border-slate-300 rounded text-xs bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium"
+                      className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium shadow-2xs"
                       autoFocus
                     />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-0.5">
+                    <span className="text-[10px] text-slate-500 leading-tight">
+                      Otomatis tersimpan & dipilih
+                    </span>
                     <button
                       type="button"
                       disabled={creatingCategory || !newCategoryName.trim()}
                       onClick={handleCreateCategoryInline}
-                      className="px-3 py-1.5 bg-brand-500 hover:bg-brand-600 text-white rounded text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1 shadow-xs"
+                      className="px-3.5 py-1.5 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-40 flex items-center gap-1.5 shadow-xs flex-shrink-0"
                     >
                       {creatingCategory ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Menyimpan...</span>
+                        </>
                       ) : (
                         <>
-                          <Check className="w-3 h-3" />
+                          <Check className="w-3.5 h-3.5" />
                           <span>Simpan</span>
                         </>
                       )}
                     </button>
                   </div>
+
                   {categoryNotice && (
-                    <p className="text-[11px] text-rose-600 font-medium">{categoryNotice}</p>
+                    <p className="text-[11px] text-rose-600 font-medium bg-rose-50 p-1.5 rounded border border-rose-200">
+                      {categoryNotice}
+                    </p>
                   )}
-                  <p className="text-[10px] text-slate-500">
-                    Kategori baru akan langsung tersimpan dan otomatis dipilih tanpa delay.
-                  </p>
                 </div>
               )}
 
