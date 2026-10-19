@@ -3,24 +3,33 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Route untuk melayani file gambar QRIS toko secara handal dari folder public/
- * Menghindari kendala cache runtime Next.js dan menjamin tampil di semua shift kasir.
+ * Route untuk melayani file QRIS toko (murni QR code saja)
+ * Menampilkan kode QR bersih tanpa background poster luar
  */
 export async function GET(req: NextRequest) {
   try {
     const publicDir = path.join(process.cwd(), 'public');
-    const jpgPath = path.join(publicDir, 'qris-store.jpg');
+    const purePngPath = path.join(publicDir, 'qris-pure.png');
+    const croppedPngPath = path.join(publicDir, 'qris-cropped.png');
     const pngPath = path.join(publicDir, 'qris-store.png');
+    const jpgPath = path.join(publicDir, 'qris-store.jpg');
 
     let filePath = '';
-    let contentType = 'image/jpeg';
+    let contentType = 'image/png';
 
-    if (fs.existsSync(jpgPath)) {
-      filePath = jpgPath;
-      contentType = 'image/jpeg';
+    // Prioritaskan file QR murni jika sudah diekstrak
+    if (fs.existsSync(purePngPath)) {
+      filePath = purePngPath;
+      contentType = 'image/png';
+    } else if (fs.existsSync(croppedPngPath)) {
+      filePath = croppedPngPath;
+      contentType = 'image/png';
     } else if (fs.existsSync(pngPath)) {
       filePath = pngPath;
       contentType = 'image/png';
+    } else if (fs.existsSync(jpgPath)) {
+      filePath = jpgPath;
+      contentType = 'image/jpeg';
     } else {
       return NextResponse.json({ error: 'Foto QRIS belum diunggah.' }, { status: 404 });
     }

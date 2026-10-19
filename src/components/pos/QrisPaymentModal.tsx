@@ -76,10 +76,10 @@ export default function QrisPaymentModal({
     if (activeTab === 'DYNAMIC' && canvasRef.current) {
       const qrString =
         qrCodeData ||
-        `00020101021226600016ID.CO.QRIS.WWW011893600000000000000052045499530336054${grandTotal}5802ID5914SMPIT AL QALAM6007JAKARTA62190715${receiptNumber}6304ABCD`;
+        '00020101021126610014COM.GO-JEK.WWW01189360091434872473310210G4872473310303UMI51440014ID.CO.QRIS.WWW0215ID10264693049540303UMI5204899953033605802ID5916Jimpitan Digital6008BANYUMAS61055313362070703A0163041C04';
 
       QRCode.toCanvas(canvasRef.current, qrString, {
-        width: 230,
+        width: 250,
         margin: 2,
         color: {
           dark: '#0f172a',
@@ -256,44 +256,24 @@ export default function QrisPaymentModal({
             </div>
           </div>
 
-          {/* TAMPILAN TAB 1: QRIS KERTAS MEJA (FOTO RESMI STIKER KASIR TOKO) */}
+          {/* TAMPILAN TAB 1: QRIS KERTAS MEJA (QR CODE MURNI) */}
           {activeTab === 'TABLE' && (
             <div className="w-full flex flex-col items-center">
-              {/* Box Stiker Meja Kasir */}
-              <div className="relative w-full max-w-[340px] p-3 bg-white border-2 border-brand-500 rounded-2xl shadow-sm flex flex-col items-center overflow-hidden">
-                <div className="w-full bg-brand-50 border-b border-brand-100 py-1.5 px-3 mb-2 rounded-t-lg flex items-center justify-between text-brand-800">
-                  <div className="flex items-center gap-1.5">
-                    <Store className="w-3.5 h-3.5 text-brand-600" />
-                    <span className="text-[11px] font-extrabold uppercase tracking-wide">
-                      QRIS SMPIT AL QALAM
-                    </span>
-                  </div>
-                  <span className="text-[9px] bg-brand-200/80 text-brand-900 px-1.5 py-0.5 rounded font-extrabold">
-                    RESMI
-                  </span>
-                </div>
-
-                {/* Tampilan Gambar QRIS Toko */}
-                <div className="w-full min-h-[220px] max-h-[300px] bg-slate-50 border border-slate-100 rounded-xl p-2 flex items-center justify-center overflow-hidden">
+              {/* Box QR Code Murni */}
+              <div className="relative p-4 sm:p-5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm flex flex-col items-center justify-center">
+                <div className="w-60 h-60 sm:w-64 sm:h-64 flex items-center justify-center bg-white rounded-xl overflow-hidden p-1">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={qrisImageSrc}
-                    alt="Stiker QRIS Meja Toko"
-                    className="max-h-[280px] w-auto max-w-full object-contain rounded-lg shadow-2xs"
+                    alt="Kode QRIS Toko"
+                    className="w-full h-full object-contain rounded-lg"
                     onError={(e) => {
-                      // Fallback jika path utama bermasalah
                       const target = e.currentTarget;
-                      if (!target.src.endsWith('/qris-store.jpg')) {
-                        target.src = '/qris-store.jpg';
+                      if (!target.src.endsWith('/qris-pure.png')) {
+                        target.src = '/qris-pure.png';
                       }
                     }}
                   />
-                </div>
-
-                <div className="mt-2 text-center w-full">
-                  <span className="text-[10px] font-bold text-brand-700 bg-brand-50 border border-brand-200 px-2.5 py-0.5 rounded-full inline-block">
-                    Semua Bank (BCA, Mandiri, BRI, BNI, BSI) & E-Wallet (GoPay, Dana, OVO, ShopeePay)
-                  </span>
                 </div>
 
                 {/* Overlay Status Lunas */}
@@ -307,18 +287,6 @@ export default function QrisPaymentModal({
                     </span>
                   </div>
                 )}
-              </div>
-
-              {/* Panduan Singkat Kasir */}
-              <div className="mt-3 p-3 bg-amber-50/90 border border-amber-200 rounded-xl text-left w-full text-xs text-amber-950">
-                <span className="font-bold flex items-center gap-1.5 text-amber-900 mb-1">
-                  <Check className="w-4 h-4 text-amber-600" />
-                  Alur Pembayaran Kasir:
-                </span>
-                <p className="text-[11px] text-slate-700 leading-relaxed">
-                  1. Minta pembeli memindai QRIS di meja / layar & mentransfer nominal <strong>{formatRupiah(grandTotal)}</strong>.<br/>
-                  2. Begitu pembeli menunjukkan bukti bayar berhasil di HP, klik tombol hijau <strong>"Konfirmasi Pembayaran Diterima"</strong> di bawah (atau tekan <strong>Enter</strong>) untuk mencetak struk.
-                </p>
               </div>
             </div>
           )}

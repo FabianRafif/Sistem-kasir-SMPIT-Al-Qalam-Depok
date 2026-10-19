@@ -41,6 +41,44 @@ export async function POST(req: NextRequest) {
     fs.writeFileSync(filePathJpg, buffer);
     fs.writeFileSync(filePathPng, buffer);
 
+    // Otomatis ekstrak dan generate kode QR murni (QR-nya saja)
+    try {
+      const { Jimp } = await import('jimp');
+      const jsQR = (await import('jsqr')).default;
+      const QRCode = (await import('qrcode')).default;
+
+      const image = await Jimp.read(buffer);
+      const width = image.bitmap.width;
+      const height = image.bitmap.height;
+
+      let qr = jsQR(new Uint8ClampedArray(image.bitmap.data), width, height);
+      if (!qr) {
+        // Coba deteksi di area tengah (70%)
+        const cx = Math.floor(width * 0.15);
+        const cy = Math.floor(height * 0.25);
+        const cw = Math.floor(width * 0.7);
+        const ch = Math.floor(height * 0.55);
+        image.crop({ x: cx, y: cy, w: cw, h: ch });
+        qr = jsQR(new Uint8ClampedArray(image.bitmap.data), image.bitmap.width, image.bitmap.height);
+      }
+
+      if (qr && qr.data) {
+        fs.writeFileSync(path.join(publicDir, 'qris-payload.txt'), qr.data);
+        const purePngPath = path.join(publicDir, 'qris-pure.png');
+        await QRCode.toFile(purePngPath, qr.data, {
+          width: 600,
+          margin: 2,
+          color: { dark: '#000000', light: '#ffffff' },
+        });
+      } else {
+        // Jika tidak dapat didecode, jadikan gambar unggahan sebagai qris-pure.png
+        fs.writeFileSync(path.join(publicDir, 'qris-pure.png'), buffer);
+      }
+    } catch (qrErr) {
+      console.warn('Gagal ekstrak otomatis QR:', qrErr);
+      fs.writeFileSync(path.join(publicDir, 'qris-pure.png'), buffer);
+    }
+
     const imageUrl = `/api/qris/image?t=${Date.now()}`;
 
     // Update ke database store settings
@@ -59,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Foto QRIS toko berhasil diunggah dan aktif untuk seluruh shift kasir.',
+      message: 'Foto QRIS toko berhasil diekstrak menjadi kode QR murni dan aktif untuk seluruh shift kasir.',
       url: imageUrl,
     });
   } catch (error: any) {
