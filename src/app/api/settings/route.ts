@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { logAudit } from '@/lib/security';
 import { QrisMode } from '@prisma/client';
+import fs from 'fs';
+import path from 'path';
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,19 +12,35 @@ export async function GET(req: NextRequest) {
       where: { id: 'default' },
     });
 
+    const publicQrisExists =
+      fs.existsSync(path.join(process.cwd(), 'public', 'qris-store.jpg')) ||
+      fs.existsSync(path.join(process.cwd(), 'public', 'qris-store.png'));
+    const defaultQris = publicQrisExists ? '/api/qris/image' : null;
+
+    const currentImage = settings?.qrisStaticImage === '/qris-store.jpg' ? '/api/qris/image' : settings?.qrisStaticImage;
+
+    const data = settings
+      ? {
+          ...settings,
+          qrisStaticImage: currentImage || defaultQris,
+          qrisMode: currentImage || defaultQris ? settings.qrisMode || 'STATIC' : settings.qrisMode,
+        }
+      : {
+          storeName: 'Kantin & Minimarket SMPIT Al Qalam',
+          schoolName: 'SMPIT Al Qalam',
+          address: 'Kompleks Pendidikan Islam Terpadu Al Qalam',
+          phone: '(021) 7755912',
+          receiptFooter: 'Terima kasih telah berbelanja di Minimarket SMPIT Al Qalam.',
+          logoPath: '/logo-alqalam.png',
+          timezone: 'Asia/Jakarta',
+          printerPaperSize: '58mm',
+          qrisMode: defaultQris ? 'STATIC' : 'DYNAMIC',
+          qrisStaticImage: defaultQris,
+        };
+
     return NextResponse.json({
       success: true,
-      data: settings || {
-        storeName: 'Kantin & Minimarket SMPIT Al Qalam',
-        schoolName: 'SMPIT Al Qalam',
-        address: 'Kompleks Pendidikan Islam Terpadu Al Qalam',
-        phone: '(021) 7755912',
-        receiptFooter: 'Terima kasih telah berbelanja di Minimarket SMPIT Al Qalam.',
-        logoPath: '/logo-alqalam.png',
-        timezone: 'Asia/Jakarta',
-        printerPaperSize: '58mm',
-        qrisMode: 'DYNAMIC',
-      },
+      data,
     });
   } catch (error) {
     return NextResponse.json({ error: 'Gagal memuat pengaturan toko.' }, { status: 500 });

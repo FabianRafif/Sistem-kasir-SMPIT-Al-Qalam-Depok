@@ -396,19 +396,34 @@ export default function SettingsPage() {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          if (file.size > 3 * 1024 * 1024) {
-                            showNotice('error', 'Ukuran foto maksimal 3 MB.');
+                          if (file.size > 5 * 1024 * 1024) {
+                            showNotice('error', 'Ukuran foto maksimal 5 MB.');
                             return;
                           }
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            setQrisStaticImage(reader.result as string);
-                            showNotice('success', 'Foto stiker QRIS berhasil dimuat! Klik "Simpan Seluruh Pengaturan" untuk menyimpan.');
-                          };
-                          reader.readAsDataURL(file);
+
+                          const formData = new FormData();
+                          formData.append('file', file);
+
+                          try {
+                            showNotice('success', 'Mengunggah foto QRIS toko...');
+                            const res = await fetch('/api/settings/upload-qris', {
+                              method: 'POST',
+                              body: formData,
+                            });
+                            const result = await res.json();
+                            if (res.ok && result.success) {
+                              setQrisStaticImage(result.url);
+                              setQrisMode('STATIC');
+                              showNotice('success', 'Foto QRIS toko berhasil disimpan dan langsung aktif di seluruh kasir!');
+                            } else {
+                              showNotice('error', result.error || 'Gagal mengunggah foto QRIS.');
+                            }
+                          } catch (err: any) {
+                            showNotice('error', err.message || 'Gagal memproses upload.');
+                          }
                         }
                       }}
                     />
@@ -417,13 +432,13 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      // Template QRIS Meja Resmi SMPIT Al Qalam
-                      setQrisStaticImage('/logo-alqalam.png');
-                      showNotice('success', 'Template QRIS resmi dipilih. Klik simpan untuk menyimpan.');
+                      setQrisStaticImage('/api/qris/image?t=' + Date.now());
+                      setQrisMode('STATIC');
+                      showNotice('success', 'QRIS Toko resmi (GoPay / Meja) dipilih.');
                     }}
                     className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold shadow-2xs transition-colors"
                   >
-                    Gunakan Default Logo Al Qalam
+                    Gunakan QRIS Toko (GoPay / Meja)
                   </button>
                 </div>
 
