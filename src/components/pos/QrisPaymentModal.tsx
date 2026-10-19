@@ -11,8 +11,8 @@ import {
   AlertCircle,
   Smartphone,
   Store,
-  CreditCard,
-  Check,
+  ArrowLeft,
+  Monitor,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/format';
 import { playQrisConfirmationVoice } from '@/lib/sound';
@@ -71,7 +71,7 @@ export default function QrisPaymentModal({
     };
   }, []);
 
-  // 2. Render QR Code Dinamis pada Canvas (apabila tab DYNAMIC dipilih)
+  // 2. Render QR Code pada Canvas saat Mode Layar Kasir Aktif
   useEffect(() => {
     if (activeTab === 'DYNAMIC' && canvasRef.current) {
       // Prioritaskan payload QRIS asli dari upload admin toko
@@ -82,7 +82,7 @@ export default function QrisPaymentModal({
       const validPayload = !isDummyString && qrCodeData ? qrCodeData : storeSettings?.qrisPayload || defaultStorePayload;
 
       QRCode.toCanvas(canvasRef.current, validPayload, {
-        width: 250,
+        width: 290,
         margin: 2,
         color: {
           dark: '#0f172a',
@@ -166,7 +166,7 @@ export default function QrisPaymentModal({
     }
   }, [status, saleId, grandTotal, onPaymentSuccess]);
 
-  // 5. Dukungan Pintasan Keyboard Kasir (Enter = Konfirmasi Lunas, Esc = Tutup)
+  // 5. Dukungan Pintasan Keyboard Kasir (Enter = Konfirmasi Lunas, Esc = Tutup/Kembali)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (status !== 'PENDING') return;
@@ -176,17 +176,142 @@ export default function QrisPaymentModal({
         handleConfirmInflow();
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        if (activeTab === 'DYNAMIC') {
+          setActiveTab('TABLE');
+        } else {
+          onClose();
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [status, handleConfirmInflow, onClose]);
+  }, [status, activeTab, handleConfirmInflow, onClose]);
 
   // Gambar QRIS Toko: Gunakan stream handal /api/qris/image jika database kosong
   const qrisImageSrc = storeSettings?.qrisStaticImage || '/api/qris/image';
 
+  // =========================================================================
+  // MODE 2: QRIS LAYAR KASIR (MODE LAYAR PENUH KHUSUS PEMBELI)
+  // =========================================================================
+  if (activeTab === 'DYNAMIC') {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col justify-between bg-slate-950 text-white p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+        {/* Header Mode Layar Penuh */}
+        <div className="w-full max-w-4xl mx-auto flex items-center justify-between py-2 border-b border-slate-800">
+          <button
+            type="button"
+            onClick={() => setActiveTab('TABLE')}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-bold transition-all border border-slate-700 cursor-pointer shadow-xs"
+          >
+            <ArrowLeft className="w-4 h-4 text-brand-400" />
+            <span>Kembali ke Mode Meja</span>
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="text-xs font-bold text-slate-300 uppercase tracking-wider font-mono">
+              Layar Pembeli Aktif • {receiptNumber}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 rounded-xl bg-slate-900 hover:bg-rose-900/60 text-slate-300 hover:text-white transition-all border border-slate-700 cursor-pointer"
+            aria-label="Tutup"
+            title="Tutup (Esc)"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Konten Utama Layar Penuh: Nominal Tagihan Besar + QR Code Murni */}
+        <div className="flex-1 flex flex-col items-center justify-center py-4 my-auto w-full max-w-md mx-auto text-center space-y-4">
+          {errorMessage && (
+            <div className="w-full flex items-center gap-2 p-3 bg-rose-950/80 border border-rose-800 text-rose-200 text-xs rounded-xl text-left">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Nominal Tagihan Besar & Jelas untuk Pembeli */}
+          <div className="w-full bg-slate-900/90 border border-slate-800 rounded-2xl py-3 px-6 shadow-xl">
+            <span className="text-[11px] font-bold text-brand-300 uppercase tracking-widest block mb-1">
+              Total Tagihan Belanja
+            </span>
+            <div className="text-4xl sm:text-5xl font-black text-white font-mono tabular-nums tracking-tight">
+              {formatRupiah(grandTotal)}
+            </div>
+          </div>
+
+          {/* Box Kode QR Murni Layar Penuh */}
+          <div className="relative p-5 bg-white rounded-3xl shadow-2xl border-4 border-slate-800 flex flex-col items-center justify-center">
+            <div className="w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center bg-white rounded-2xl overflow-hidden p-1">
+              <canvas ref={canvasRef} className="max-w-full max-h-full rounded-xl" />
+            </div>
+
+            {/* Overlay Status Lunas */}
+            {status === 'PAID' && (
+              <div className="absolute inset-0 bg-emerald-600/98 backdrop-blur-xs rounded-3xl flex flex-col items-center justify-center text-white p-6 animate-in fade-in zoom-in duration-200">
+                <CheckCircle2 className="w-20 h-20 text-white mb-3 animate-bounce" />
+                <span className="text-2xl font-black tracking-wider">PEMBAYARAN LUNAS</span>
+                <span className="text-sm text-emerald-100 mt-1">Struk otomatis tercetak</span>
+                <span className="text-xs text-emerald-200 mt-4 flex items-center gap-1.5 bg-emerald-700/80 px-3 py-1.5 rounded-full font-medium">
+                  <Volume2 className="w-4 h-4" /> Audio pelunasan berbunyi
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="text-center">
+            <span className="text-[11px] text-slate-400 font-medium">
+              Scan dengan aplikasi BCA, Mandiri, BRI, BNI, BSI, GoPay, Dana, OVO, ShopeePay
+            </span>
+          </div>
+        </div>
+
+        {/* Tombol Konfirmasi Biru (Sama Persis) */}
+        <div className="w-full max-w-md mx-auto pt-2 pb-1 flex flex-col items-center gap-2">
+          {status === 'PENDING' && (
+            <button
+              type="button"
+              onClick={handleConfirmInflow}
+              disabled={isVerifying || status === 'PAID'}
+              className="w-full py-4 px-6 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white rounded-2xl text-base font-bold shadow-xl shadow-brand-500/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-75 disabled:pointer-events-none cursor-pointer"
+            >
+              {isVerifying ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin text-white" />
+                  <span>Memproses Pelunasan Transaksi...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-5 h-5 text-white" />
+                  <span>Konfirmasi Pembayaran Diterima (Lunas & Cetak Struk)</span>
+                </>
+              )}
+            </button>
+          )}
+
+          <div className="flex items-center justify-between w-full px-2 text-[11px] text-slate-500">
+            <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              Deteksi otomatis aktif
+            </span>
+            <span className="text-slate-400 font-mono text-[10px]">Pintasan: [Enter] = Konfirmasi • [Esc] = Kembali</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // MODE 1: QRIS KERTAS MEJA (TAMPILAN MODAL STANDAR KASIR)
+  // =========================================================================
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden my-auto text-center animate-in fade-in zoom-in-95 duration-150">
@@ -236,8 +361,11 @@ export default function QrisPaymentModal({
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Smartphone className="w-4 h-4 text-brand-600" />
+            <Monitor className="w-4 h-4 text-brand-600" />
             <span>QRIS Layar Kasir</span>
+            <span className="text-[9px] bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded font-extrabold uppercase">
+              Mode Layar
+            </span>
           </button>
         </div>
 
@@ -260,67 +388,42 @@ export default function QrisPaymentModal({
           </div>
 
           {/* TAMPILAN TAB 1: QRIS KERTAS MEJA (QR CODE MURNI) */}
-          {activeTab === 'TABLE' && (
-            <div className="w-full flex flex-col items-center">
-              {/* Box QR Code Murni */}
-              <div className="relative p-4 sm:p-5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm flex flex-col items-center justify-center">
-                <div className="w-60 h-60 sm:w-64 sm:h-64 flex items-center justify-center bg-white rounded-xl overflow-hidden p-1">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={qrisImageSrc}
-                    alt="Kode QRIS Toko"
-                    className="w-full h-full object-contain rounded-lg"
-                    onError={(e) => {
-                      const target = e.currentTarget;
-                      if (!target.src.endsWith('/qris-pure.png')) {
-                        target.src = '/qris-pure.png';
-                      }
-                    }}
-                  />
-                </div>
-
-                {/* Overlay Status Lunas */}
-                {status === 'PAID' && (
-                  <div className="absolute inset-0 bg-emerald-600/95 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center text-white p-4 animate-in fade-in zoom-in duration-200">
-                    <CheckCircle2 className="w-16 h-16 text-white mb-2 animate-bounce" />
-                    <span className="text-lg font-black tracking-wide">PEMBAYARAN QRIS LUNAS</span>
-                    <span className="text-xs text-emerald-100 mt-1">Stok terpotong otomatis & struk siap dicetak</span>
-                    <span className="text-[10px] text-emerald-200 mt-3 flex items-center gap-1.5 bg-emerald-700/60 px-2.5 py-1 rounded-full">
-                      <Volume2 className="w-3.5 h-3.5" /> Audio pelunasan berbunyi
-                    </span>
-                  </div>
-                )}
+          <div className="w-full flex flex-col items-center">
+            {/* Box QR Code Murni */}
+            <div className="relative p-4 sm:p-5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm flex flex-col items-center justify-center">
+              <div className="w-60 h-60 sm:w-64 sm:h-64 flex items-center justify-center bg-white rounded-xl overflow-hidden p-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrisImageSrc}
+                  alt="Kode QRIS Toko"
+                  className="w-full h-full object-contain rounded-lg"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.endsWith('/qris-pure.png')) {
+                      target.src = '/qris-pure.png';
+                    }
+                  }}
+                />
               </div>
-            </div>
-          )}
 
-          {/* TAMPILAN TAB 2: QRIS DINAMIS LAYAR KASIR */}
-          {activeTab === 'DYNAMIC' && (
-            <div className="w-full flex flex-col items-center">
-              <div className="relative p-4 sm:p-5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm flex flex-col items-center justify-center">
-                <div className="w-60 h-60 sm:w-64 sm:h-64 flex items-center justify-center bg-white rounded-xl overflow-hidden p-1">
-                  <canvas ref={canvasRef} className="max-w-full max-h-full rounded-lg" />
+              {/* Overlay Status Lunas */}
+              {status === 'PAID' && (
+                <div className="absolute inset-0 bg-emerald-600/95 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center text-white p-4 animate-in fade-in zoom-in duration-200">
+                  <CheckCircle2 className="w-16 h-16 text-white mb-2 animate-bounce" />
+                  <span className="text-lg font-black tracking-wide">PEMBAYARAN QRIS LUNAS</span>
+                  <span className="text-xs text-emerald-100 mt-1">Stok terpotong otomatis & struk siap dicetak</span>
+                  <span className="text-[10px] text-emerald-200 mt-3 flex items-center gap-1.5 bg-emerald-700/60 px-2.5 py-1 rounded-full">
+                    <Volume2 className="w-3.5 h-3.5" /> Audio pelunasan berbunyi
+                  </span>
                 </div>
-
-                {/* Overlay Status Lunas */}
-                {status === 'PAID' && (
-                  <div className="absolute inset-0 bg-emerald-600/95 backdrop-blur-xs rounded-2xl flex flex-col items-center justify-center text-white p-4 animate-in fade-in zoom-in duration-200">
-                    <CheckCircle2 className="w-16 h-16 text-white mb-2 animate-bounce" />
-                    <span className="text-lg font-black">PEMBAYARAN QRIS LUNAS</span>
-                    <span className="text-xs text-emerald-100 mt-1">Stok dikurangi otomatis</span>
-                    <span className="text-[10px] text-emerald-200 mt-2 flex items-center gap-1">
-                      <Volume2 className="w-3 h-3" /> Audio pelunasan diputar
-                    </span>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
-          )}
+          </div>
 
           {/* TOMBOL AKSI UTAMA KASIR */}
           {status === 'PENDING' && (
             <div className="mt-4 w-full flex flex-col gap-2.5">
-              {/* Tombol Konfirmasi Pembayaran Kasir */}
+              {/* Tombol Konfirmasi Pembayaran Kasir (Warna Biru Brand Senada) */}
               <button
                 type="button"
                 onClick={handleConfirmInflow}
