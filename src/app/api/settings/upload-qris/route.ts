@@ -37,9 +37,11 @@ export async function POST(req: NextRequest) {
 
     const filePathJpg = path.join(publicDir, 'qris-store.jpg');
     const filePathPng = path.join(publicDir, 'qris-store.png');
+    const filePathFull = path.join(publicDir, 'qris-full.jpg');
 
     fs.writeFileSync(filePathJpg, buffer);
     fs.writeFileSync(filePathPng, buffer);
+    fs.writeFileSync(filePathFull, buffer);
 
     let extractedPayload = '';
 
@@ -115,25 +117,25 @@ export async function POST(req: NextRequest) {
       console.warn('Gagal ekstrak otomatis QR:', qrErr);
     }
 
-    const imageUrl = `/api/qris/image?t=${Date.now()}`;
+    const imageUrl = `/api/qris/image?view=full&t=${Date.now()}`;
 
     // Update ke database store settings
     await prisma.storeSetting.upsert({
       where: { id: 'default' },
       update: {
-        qrisStaticImage: '/api/qris/image',
+        qrisStaticImage: '/api/qris/image?view=full',
         qrisMode: 'STATIC',
       },
       create: {
         id: 'default',
-        qrisStaticImage: '/api/qris/image',
+        qrisStaticImage: '/api/qris/image?view=full',
         qrisMode: 'STATIC',
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Foto QRIS berhasil diekstrak menjadi kode QR murni (hanya QR code) dan aktif di kasir.',
+      message: 'Foto poster QRIS berhasil diunggah (tampil penuh di sini) dan kode QR murni otomatis aktif untuk kasir.',
       url: imageUrl,
       payload: extractedPayload,
     });

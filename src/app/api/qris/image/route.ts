@@ -3,35 +3,59 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Route untuk melayani file QRIS toko (murni QR code saja)
- * Menampilkan kode QR bersih tanpa background poster luar
+ * Route untuk melayani gambar QRIS:
+ * - ?view=full  => Menyajikan foto poster QRIS lengkap (sesuai yang diunggah admin di Pengaturan)
+ * - ?view=pure (default) => Menyajikan HANYA kode QR murni (untuk kasir saat pembayaran)
  */
 export async function GET(req: NextRequest) {
   try {
     const publicDir = path.join(process.cwd(), 'public');
-    const purePngPath = path.join(publicDir, 'qris-pure.png');
-    const croppedPngPath = path.join(publicDir, 'qris-cropped.png');
-    const pngPath = path.join(publicDir, 'qris-store.png');
-    const jpgPath = path.join(publicDir, 'qris-store.jpg');
+    const searchParams = req.nextUrl.searchParams;
+    const view = searchParams.get('view') || searchParams.get('type') || 'pure';
 
     let filePath = '';
     let contentType = 'image/png';
 
-    // Prioritaskan file QR murni jika sudah diekstrak
-    if (fs.existsSync(purePngPath)) {
-      filePath = purePngPath;
-      contentType = 'image/png';
-    } else if (fs.existsSync(croppedPngPath)) {
-      filePath = croppedPngPath;
-      contentType = 'image/png';
-    } else if (fs.existsSync(pngPath)) {
-      filePath = pngPath;
-      contentType = 'image/png';
-    } else if (fs.existsSync(jpgPath)) {
-      filePath = jpgPath;
-      contentType = 'image/jpeg';
+    if (view === 'full') {
+      // 1. Tampilkan Foto Poster Lengkap (GoPay / Meja Toko) untuk pratinjau di Pengaturan
+      const fullJpg = path.join(publicDir, 'qris-full.jpg');
+      const storeJpg = path.join(publicDir, 'qris-store.jpg');
+      const storePng = path.join(publicDir, 'qris-store.png');
+
+      if (fs.existsSync(fullJpg)) {
+        filePath = fullJpg;
+        contentType = 'image/jpeg';
+      } else if (fs.existsSync(storeJpg)) {
+        filePath = storeJpg;
+        contentType = 'image/jpeg';
+      } else if (fs.existsSync(storePng)) {
+        filePath = storePng;
+        contentType = 'image/png';
+      } else {
+        filePath = path.join(publicDir, 'qris-pure.png');
+        contentType = 'image/png';
+      }
     } else {
-      return NextResponse.json({ error: 'Foto QRIS belum diunggah.' }, { status: 404 });
+      // 2. Tampilkan HANYA Kode QR Murni saat transaksi pembayaran di Kasir
+      const purePng = path.join(publicDir, 'qris-pure.png');
+      const croppedPng = path.join(publicDir, 'qris-cropped.png');
+
+      if (fs.existsSync(purePng)) {
+        filePath = purePng;
+        contentType = 'image/png';
+      } else if (fs.existsSync(croppedPng)) {
+        filePath = croppedPng;
+        contentType = 'image/png';
+      } else if (fs.existsSync(path.join(publicDir, 'qris-store.jpg'))) {
+        filePath = path.join(publicDir, 'qris-store.jpg');
+        contentType = 'image/jpeg';
+      } else {
+        return NextResponse.json({ error: 'Foto QRIS belum diunggah.' }, { status: 404 });
+      }
+    }
+
+    if (!fs.existsSync(filePath)) {
+      return NextResponse.json({ error: 'File QRIS tidak ditemukan.' }, { status: 404 });
     }
 
     const fileBuffer = fs.readFileSync(filePath);

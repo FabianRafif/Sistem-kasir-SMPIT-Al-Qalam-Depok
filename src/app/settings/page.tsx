@@ -354,24 +354,24 @@ export default function SettingsPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-start gap-4 pt-1">
-              {/* Preview Box Foto QRIS Meja (Bentuk Kotak Khusus QR Code Murni) */}
-              <div className="w-48 h-48 sm:w-56 sm:h-56 bg-white rounded-2xl border-2 border-dashed border-slate-300 p-2.5 flex flex-col items-center justify-center relative overflow-hidden shadow-xs flex-shrink-0">
+              {/* Preview Box Foto QRIS Meja (Bentuk Portrait Khusus Foto Poster Penuh) */}
+              <div className="w-48 h-64 sm:w-56 sm:h-76 bg-white rounded-2xl border-2 border-dashed border-slate-300 p-2 flex flex-col items-center justify-center relative overflow-hidden shadow-xs flex-shrink-0">
                 {qrisStaticImage ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={qrisStaticImage}
-                      alt="Kode QRIS Toko Murni"
+                      src={qrisStaticImage.includes('?') ? `${qrisStaticImage}&view=full` : `${qrisStaticImage}?view=full`}
+                      alt="Foto Poster QRIS Resmi Penuh"
                       className="w-full h-full object-contain rounded-xl"
                       onError={(e) => {
                         const target = e.currentTarget;
-                        if (!target.src.includes('/qris-pure.png')) {
-                          target.src = '/qris-pure.png';
+                        if (!target.src.includes('qris-store.jpg') && !target.src.includes('qris-full.jpg')) {
+                          target.src = '/qris-store.jpg';
                         }
                       }}
                     />
                     <div className="absolute bottom-1.5 left-2 right-2 bg-slate-900/90 backdrop-blur-xs text-white text-[10px] font-bold py-1 px-2 rounded-lg text-center truncate shadow-xs">
-                      Hanya Kode QR Murni
+                      Foto Poster QRIS Penuh
                     </div>
                     <button
                       type="button"
@@ -389,7 +389,7 @@ export default function SettingsPage() {
                   <div className="text-center p-3">
                     <QrCode className="w-12 h-12 text-slate-300 mx-auto mb-2" />
                     <span className="text-[11px] text-slate-500 font-semibold block">
-                      Belum ada kode QR
+                      Belum ada poster QRIS
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">
                       Upload foto poster QRIS resmi
@@ -421,7 +421,7 @@ export default function SettingsPage() {
                       formData.append('file', file);
 
                       setUploadingQris(true);
-                      showNotice('info', 'Sedang mengunggah dan mengekstrak kode QR murni dari poster...');
+                      showNotice('info', 'Sedang mengunggah poster dan mengekstrak kode QR murni untuk kasir...');
 
                       try {
                         const res = await fetch('/api/settings/upload-qris', {
@@ -432,7 +432,7 @@ export default function SettingsPage() {
                         if (res.ok && result.success) {
                           setQrisStaticImage(result.url);
                           setQrisMode('STATIC');
-                          showNotice('success', 'Kode QR murni berhasil diekstrak dan langsung terpasang untuk kasir!');
+                          showNotice('success', 'Foto poster QRIS berhasil diunggah (tampil penuh di sini) dan kode QR murni otomatis aktif untuk kasir!');
                         } else {
                           showNotice('error', result.error || 'Gagal mengunggah foto QRIS.');
                         }
@@ -456,7 +456,7 @@ export default function SettingsPage() {
                     {uploadingQris ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin text-white" />
-                        <span>Mengekstrak Kode QR Murni...</span>
+                        <span>Mengunggah Poster QRIS...</span>
                       </>
                     ) : (
                       <>
@@ -465,28 +465,15 @@ export default function SettingsPage() {
                       </>
                     )}
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setQrisStaticImage('/api/qris/image?t=' + Date.now());
-                      setQrisMode('STATIC');
-                      showNotice('success', 'Kode QR Murni resmi (GoPay / Jimpitan Digital) dipilih.');
-                    }}
-                    className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                  >
-                    Gunakan QRIS Toko (GoPay / Jimpitan)
-                  </button>
                 </div>
 
                 <div className="p-3 bg-brand-50 border border-brand-200 rounded-xl text-[11px] text-brand-900 space-y-1.5">
                   <div className="font-bold flex items-center gap-1.5">
-                    <span>💡 Cara Kerja Ekstraksi Otomatis Foto QRIS:</span>
+                    <span>💡 Tampilan Poster Penuh vs Kasir:</span>
                   </div>
                   <ol className="list-decimal pl-4 space-y-0.5 text-slate-700">
-                    <li>Admin dapat mengunggah foto poster QRIS apa pun (seperti poster GoPay Merchant, BCA, Mandiri, dll).</li>
-                    <li>Sistem secara cerdas memotong dan mengambil <strong>hanya bagian kode QR-nya saja</strong>, membuang bingkai luar, header, dan logo bank.</li>
-                    <li>Hasil QR code murni tersebut otomatis dipakai di layar kasir (popup meja & mode layar penuh) sehingga pembeli bisa memindai dengan sangat cepat.</li>
+                    <li><strong>Di Halaman Pengaturan Ini:</strong> Ditampilkan foto poster QRIS lengkap (ada logo GoPay, nama toko, dan logo bank) sesuai foto asli yang diunggah.</li>
+                    <li><strong>Saat Pembayaran di Kasir (F9):</strong> Sistem secara otomatis mengekstrak dan menampilkan <strong>HANYA kode QR-nya saja</strong> (tanpa bingkai poster) agar pemindaian HP pembeli sangat cepat dan jernih.</li>
                   </ol>
                 </div>
               </div>

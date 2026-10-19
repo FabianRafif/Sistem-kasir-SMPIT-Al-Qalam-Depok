@@ -14,10 +14,14 @@ export async function GET(req: NextRequest) {
 
     const publicQrisExists =
       fs.existsSync(path.join(process.cwd(), 'public', 'qris-store.jpg')) ||
+      fs.existsSync(path.join(process.cwd(), 'public', 'qris-full.jpg')) ||
       fs.existsSync(path.join(process.cwd(), 'public', 'qris-store.png'));
-    const defaultQris = publicQrisExists ? '/api/qris/image' : null;
+    const defaultQris = publicQrisExists ? '/api/qris/image?view=full' : null;
 
-    const currentImage = settings?.qrisStaticImage === '/qris-store.jpg' ? '/api/qris/image' : settings?.qrisStaticImage;
+    let currentImage = settings?.qrisStaticImage;
+    if (currentImage === '/qris-store.jpg' || currentImage === '/api/qris/image') {
+      currentImage = '/api/qris/image?view=full';
+    }
 
     const payloadFile = path.join(process.cwd(), 'public', 'qris-payload.txt');
     const qrisPayload = fs.existsSync(payloadFile)
