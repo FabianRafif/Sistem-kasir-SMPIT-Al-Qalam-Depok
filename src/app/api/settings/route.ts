@@ -19,11 +19,17 @@ export async function GET(req: NextRequest) {
 
     const currentImage = settings?.qrisStaticImage === '/qris-store.jpg' ? '/api/qris/image' : settings?.qrisStaticImage;
 
+    const payloadFile = path.join(process.cwd(), 'public', 'qris-payload.txt');
+    const qrisPayload = fs.existsSync(payloadFile)
+      ? fs.readFileSync(payloadFile, 'utf-8').trim()
+      : '00020101021126610014COM.GO-JEK.WWW01189360091434872473310210G4872473310303UMI51440014ID.CO.QRIS.WWW0215ID10264693049540303UMI5204899953033605802ID5916Jimpitan Digital6008BANYUMAS61055313362070703A0163041C04';
+
     const data = settings
       ? {
           ...settings,
           qrisStaticImage: currentImage || defaultQris,
           qrisMode: currentImage || defaultQris ? settings.qrisMode || 'STATIC' : settings.qrisMode,
+          qrisPayload,
         }
       : {
           storeName: 'Kantin & Minimarket SMPIT Al Qalam',
@@ -36,6 +42,7 @@ export async function GET(req: NextRequest) {
           printerPaperSize: '58mm',
           qrisMode: defaultQris ? 'STATIC' : 'DYNAMIC',
           qrisStaticImage: defaultQris,
+          qrisPayload,
         };
 
     return NextResponse.json({

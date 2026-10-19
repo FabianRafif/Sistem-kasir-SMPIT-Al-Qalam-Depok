@@ -5,6 +5,8 @@ import { logAudit, generateReceiptNumber } from '@/lib/security';
 import { PaymentMethod, PaymentStatus, MovementType, Prisma } from '@prisma/client';
 import { formatDateTime, formatDateOnly, formatTimeOnly } from '@/lib/format';
 import { z } from 'zod';
+import fs from 'fs';
+import path from 'path';
 
 const createTransactionSchema = z.object({
   items: z.array(
@@ -214,10 +216,14 @@ export async function POST(req: NextRequest) {
             status: isPaidImmediately ? PaymentStatus.PAID : PaymentStatus.PENDING,
             idempotencyKey: idempotencyKey || null,
             paidAt: isPaidImmediately ? new Date() : null,
-            qrCodeData:
-              paymentMethod === 'QRIS'
-                ? `00020101021226600016ID.CO.QRIS.WWW011893600000000000000052045499530336054${grandTotal.toFixed(2).replace('.', '')}5802ID5914SMPIT AL QALAM6007JAKARTA62190715${receiptNumber}6304ABCD`
-                : null,
+            qrCodeData: (() => {
+              if (paymentMethod !== 'QRIS') return null;
+              const payloadFile = path.join(process.cwd(), 'public', 'qris-payload.txt');
+              if (fs.existsSync(payloadFile)) {
+                return fs.readFileSync(payloadFile, 'utf-8').trim();
+              }
+              return '00020101021126610014COM.GO-JEK.WWW01189360091434872473310210G4872473310303UMI51440014ID.CO.QRIS.WWW0215ID10264693049540303UMI5204899953033605802ID5916Jimpitan Digital6008BANYUMAS61055313362070703A0163041C04';
+            })(),
           },
         });
 

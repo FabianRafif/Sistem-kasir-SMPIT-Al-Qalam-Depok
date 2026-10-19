@@ -74,11 +74,14 @@ export default function QrisPaymentModal({
   // 2. Render QR Code Dinamis pada Canvas (apabila tab DYNAMIC dipilih)
   useEffect(() => {
     if (activeTab === 'DYNAMIC' && canvasRef.current) {
-      const qrString =
-        qrCodeData ||
+      // Prioritaskan payload QRIS asli dari upload admin toko
+      const defaultStorePayload =
         '00020101021126610014COM.GO-JEK.WWW01189360091434872473310210G4872473310303UMI51440014ID.CO.QRIS.WWW0215ID10264693049540303UMI5204899953033605802ID5916Jimpitan Digital6008BANYUMAS61055313362070703A0163041C04';
 
-      QRCode.toCanvas(canvasRef.current, qrString, {
+      const isDummyString = qrCodeData && qrCodeData.startsWith('00020101021226600016ID.CO.QRIS.WWW0118936');
+      const validPayload = !isDummyString && qrCodeData ? qrCodeData : storeSettings?.qrisPayload || defaultStorePayload;
+
+      QRCode.toCanvas(canvasRef.current, validPayload, {
         width: 250,
         margin: 2,
         color: {
@@ -89,7 +92,7 @@ export default function QrisPaymentModal({
         console.error('Error rendering QR code canvas:', err);
       });
     }
-  }, [activeTab, qrCodeData, grandTotal, receiptNumber]);
+  }, [activeTab, qrCodeData, storeSettings]);
 
   const isSubmittingRef = useRef<boolean>(false);
 
@@ -294,8 +297,10 @@ export default function QrisPaymentModal({
           {/* TAMPILAN TAB 2: QRIS DINAMIS LAYAR KASIR */}
           {activeTab === 'DYNAMIC' && (
             <div className="w-full flex flex-col items-center">
-              <div className="relative p-3 bg-white border-2 border-slate-200 rounded-2xl shadow-sm flex items-center justify-center">
-                <canvas ref={canvasRef} className="rounded-lg" />
+              <div className="relative p-4 sm:p-5 bg-white border-2 border-slate-200 rounded-2xl shadow-sm flex flex-col items-center justify-center">
+                <div className="w-60 h-60 sm:w-64 sm:h-64 flex items-center justify-center bg-white rounded-xl overflow-hidden p-1">
+                  <canvas ref={canvasRef} className="max-w-full max-h-full rounded-lg" />
+                </div>
 
                 {/* Overlay Status Lunas */}
                 {status === 'PAID' && (
