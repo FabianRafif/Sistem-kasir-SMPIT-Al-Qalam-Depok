@@ -91,6 +91,8 @@ export default function QrisPaymentModal({
     }
   }, [activeTab, qrCodeData, grandTotal, receiptNumber]);
 
+  const isSubmittingRef = useRef<boolean>(false);
+
   // 3. Polling Realtime Status Pembayaran QRIS setiap 2 detik (Mendeteksi Webhook Otomatis)
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -108,10 +110,10 @@ export default function QrisPaymentModal({
               // Putar suara konfirmasi pelunasan bahasa Indonesia
               playQrisConfirmationVoice(saleId, grandTotal);
 
-              // Callback untuk cetak struk thermal otomatis
+              // Callback untuk cetak struk thermal otomatis (respons cepat 200ms)
               setTimeout(() => {
                 onPaymentSuccess(data.receiptData);
-              }, 1000);
+              }, 200);
             } else if (data.status === 'FAILED' || data.status === 'CANCELLED') {
               setStatus('FAILED');
               setErrorMessage('Pembayaran QRIS gagal atau dibatalkan.');
@@ -131,7 +133,8 @@ export default function QrisPaymentModal({
 
   // 4. Tombol Utama Kasir: Konfirmasi Pembayaran Diterima (Lunas & Cetak Struk)
   const handleConfirmInflow = useCallback(async () => {
-    if (isVerifying || status === 'PAID') return;
+    if (isSubmittingRef.current || status === 'PAID') return;
+    isSubmittingRef.current = true;
     setIsVerifying(true);
     setErrorMessage('');
     try {
@@ -143,19 +146,22 @@ export default function QrisPaymentModal({
       const data = await res.json();
       if (!res.ok) {
         setErrorMessage(data.error || 'Gagal memverifikasi pembayaran masuk.');
+        isSubmittingRef.current = false;
+        setIsVerifying(false);
       } else if (data.success && data.receiptData) {
         setStatus('PAID');
         playQrisConfirmationVoice(saleId, grandTotal);
+        // Transisi instan ke modal cetak struk
         setTimeout(() => {
           onPaymentSuccess(data.receiptData);
-        }, 900);
+        }, 200);
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Gagal mengonfirmasi transaksi QRIS.');
-    } finally {
+      isSubmittingRef.current = false;
       setIsVerifying(false);
     }
-  }, [isVerifying, status, saleId, grandTotal, onPaymentSuccess]);
+  }, [status, saleId, grandTotal, onPaymentSuccess]);
 
   // 5. Dukungan Pintasan Keyboard Kasir (Enter = Konfirmasi Lunas, Esc = Tutup)
   useEffect(() => {
@@ -345,7 +351,7 @@ export default function QrisPaymentModal({
               <button
                 type="button"
                 onClick={handleConfirmInflow}
-                disabled={isVerifying}
+                disabled={isVerifying || status === 'PAID'}
                 className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-sm font-black shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-75 disabled:pointer-events-none cursor-pointer"
               >
                 {isVerifying ? (
