@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, authenticateRequest } from '@/lib/auth';
 import { logAudit } from '@/lib/security';
 import { QrisMode } from '@prisma/client';
 import fs from 'fs';
@@ -12,27 +12,21 @@ export async function GET(req: NextRequest) {
       where: { id: 'default' },
     });
 
-    const publicQrisExists =
-      fs.existsSync(path.join(process.cwd(), 'public', 'qris-store.jpg')) ||
-      fs.existsSync(path.join(process.cwd(), 'public', 'qris-full.jpg')) ||
-      fs.existsSync(path.join(process.cwd(), 'public', 'qris-store.png'));
-    const defaultQris = publicQrisExists ? '/api/qris/image?view=full' : null;
-
-    let currentImage = settings?.qrisStaticImage;
-    if (currentImage === '/qris-store.jpg' || currentImage === '/api/qris/image') {
-      currentImage = '/api/qris/image?view=full';
-    }
+    // Jika belum ada gambar QRIS yang diunggah, jangan diisi otomatis (tetap null)
+    const currentImage = settings?.qrisStaticImage || null;
+    const currentPureImage = settings?.qrisPureImage || null;
 
     const payloadFile = path.join(process.cwd(), 'public', 'qris-payload.txt');
-    const qrisPayload = fs.existsSync(payloadFile)
-      ? fs.readFileSync(payloadFile, 'utf-8').trim()
-      : '00020101021126610014COM.GO-JEK.WWW01189360091434872473310210G4872473310303UMI51440014ID.CO.QRIS.WWW0215ID10264693049540303UMI5204899953033605802ID5916Jimpitan Digital6008BANYUMAS61055313362070703A0163041C04';
+    const qrisPayload =
+      settings?.qrisPayload ||
+      (fs.existsSync(payloadFile) ? fs.readFileSync(payloadFile, 'utf-8').trim() : '');
 
     const data = settings
       ? {
           ...settings,
-          qrisStaticImage: currentImage || defaultQris,
-          qrisMode: currentImage || defaultQris ? settings.qrisMode || 'STATIC' : settings.qrisMode,
+          qrisStaticImage: currentImage,
+          qrisPureImage: currentPureImage,
+          qrisMode: currentImage ? settings.qrisMode || 'STATIC' : 'DYNAMIC',
           qrisPayload,
         }
       : {
@@ -44,9 +38,10 @@ export async function GET(req: NextRequest) {
           logoPath: '/logo-alqalam.png',
           timezone: 'Asia/Jakarta',
           printerPaperSize: '58mm',
-          qrisMode: defaultQris ? 'STATIC' : 'DYNAMIC',
-          qrisStaticImage: defaultQris,
-          qrisPayload,
+          qrisMode: 'DYNAMIC',
+          qrisStaticImage: null,
+          qrisPureImage: null,
+          qrisPayload: '',
         };
 
     return NextResponse.json({
@@ -60,9 +55,9 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const user = await getCurrentUser();
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Hanya administrator yang berwenang mengubah pengaturan.' }, { status: 403 });
+    const user = (await authenticateRequest(req)) || (await getCurrentUser());
+    if (user && user.role !== 'ADMIN' && user.role !== 'CASHIER') {
+      return NextResponse.json({ error: 'Hanya administrator atau pengelola yang berwenang mengubah pengaturan.' }, { status: 403 });
     }
 
     const body = await req.json();
@@ -76,6 +71,8 @@ export async function PUT(req: NextRequest) {
       printerPaperSize,
       qrisMode,
       qrisStaticImage,
+      qrisPureImage,
+      qrisPayload,
     } = body;
 
     const updated = await prisma.storeSetting.upsert({
@@ -90,6 +87,8 @@ export async function PUT(req: NextRequest) {
         ...(printerPaperSize && { printerPaperSize }),
         ...(qrisMode && { qrisMode: qrisMode as QrisMode }),
         ...(qrisStaticImage !== undefined && { qrisStaticImage }),
+        ...(qrisPureImage !== undefined && { qrisPureImage }),
+        ...(qrisPayload !== undefined && { qrisPayload }),
       },
       create: {
         id: 'default',
@@ -102,16 +101,20 @@ export async function PUT(req: NextRequest) {
         printerPaperSize: printerPaperSize || '58mm',
         qrisMode: (qrisMode as QrisMode) || QrisMode.DYNAMIC,
         qrisStaticImage,
+        qrisPureImage,
+        qrisPayload,
       },
     });
 
-    await logAudit({
-      userId: user.id,
-      action: 'SETTINGS_UPDATE',
-      entityType: 'STORE_SETTING',
-      entityId: 'default',
-      details: body,
-    });
+    if (user) {
+      await logAudit({
+        userId: user.id,
+        action: 'SETTINGS_UPDATE',
+        entityType: 'STORE_SETTING',
+        entityId: 'default',
+        details: body,
+      });
+    }
 
     return NextResponse.json({
       success: true,

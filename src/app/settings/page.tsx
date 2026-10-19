@@ -360,24 +360,33 @@ export default function SettingsPage() {
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={qrisStaticImage.includes('?') ? `${qrisStaticImage}&view=full` : `${qrisStaticImage}?view=full`}
+                      src={
+                        qrisStaticImage.startsWith('data:')
+                          ? qrisStaticImage
+                          : qrisStaticImage.includes('?')
+                          ? `${qrisStaticImage}&view=full`
+                          : `${qrisStaticImage}?view=full`
+                      }
                       alt="Foto Poster QRIS Resmi Penuh"
                       className="w-full h-full object-contain rounded-xl"
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        if (!target.src.includes('qris-store.jpg') && !target.src.includes('qris-full.jpg')) {
-                          target.src = '/qris-store.jpg';
-                        }
-                      }}
                     />
                     <div className="absolute bottom-1.5 left-2 right-2 bg-slate-900/90 backdrop-blur-xs text-white text-[10px] font-bold py-1 px-2 rounded-lg text-center truncate shadow-xs">
                       Foto Poster QRIS Penuh
                     </div>
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={async () => {
                         setQrisStaticImage('');
-                        showNotice('warning', 'Foto QRIS telah dihapus. Jangan lupa klik "Simpan Pengaturan".');
+                        try {
+                          await fetch('/api/settings', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ qrisStaticImage: '', qrisPureImage: '', qrisMode: 'DYNAMIC' }),
+                          });
+                          showNotice('warning', 'Foto poster QRIS telah dihapus dari sistem.');
+                        } catch {
+                          showNotice('warning', 'Foto QRIS telah dihapus. Jangan lupa klik "Simpan Pengaturan".');
+                        }
                       }}
                       className="absolute top-2 right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-md transition-transform hover:scale-110 cursor-pointer"
                       title="Hapus foto QRIS"
@@ -405,25 +414,61 @@ export default function SettingsPage() {
                     ref={fileInputRef}
                     id="qris-file-upload-input"
                     type="file"
-                    accept="image/*"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
                     className="sr-only"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
 
-                      if (file.size > 10 * 1024 * 1024) {
-                        showNotice('error', 'Ukuran foto maksimal 10 MB.');
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                        return;
-                      }
-
-                      const formData = new FormData();
-                      formData.append('file', file);
+                      // Tampilkan pratinjau instan di layar
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        if (ev.target?.result) {
+                          setQrisStaticImage(ev.target.result as string);
+                        }
+                      };
+                      reader.readAsDataURL(file);
 
                       setUploadingQris(true);
-                      showNotice('info', 'Sedang mengunggah poster dan mengekstrak kode QR murni untuk kasir...');
+                      showNotice('info', 'Sedang memproses dan menyimpan poster QRIS ke database...');
 
                       try {
+                        // Kompresi otomatis jika foto kamera HP berukuran besar (> 1.5 MB)
+                        let uploadBlob: Blob = file;
+                        if (file.size > 1.5 * 1024 * 1024) {
+                          uploadBlob = await new Promise<Blob>((resolve) => {
+                            const img = document.createElement('img');
+                            img.onload = () => {
+                              const canvas = document.createElement('canvas');
+                              let w = img.width;
+                              let h = img.height;
+                              const maxDim = 1600;
+                              if (w > maxDim || h > maxDim) {
+                                if (w > h) {
+                                  h = Math.round((h * maxDim) / w);
+                                  w = maxDim;
+                                } else {
+                                  w = Math.round((w * maxDim) / h);
+                                  h = maxDim;
+                                }
+                              }
+                              canvas.width = w;
+                              canvas.height = h;
+                              const ctx = canvas.getContext('2d');
+                              if (ctx) {
+                                ctx.drawImage(img, 0, 0, w, h);
+                                canvas.toBlob((b) => resolve(b || file), 'image/jpeg', 0.88);
+                              } else {
+                                resolve(file);
+                              }
+                            };
+                            img.src = URL.createObjectURL(file);
+                          });
+                        }
+
+                        const formData = new FormData();
+                        formData.append('file', uploadBlob, file.name);
+
                         const res = await fetch('/api/settings/upload-qris', {
                           method: 'POST',
                           body: formData,

@@ -233,7 +233,9 @@ model StoreSetting {
   timezone         String   @default("Asia/Jakarta") @db.VarChar(50)
   printerPaperSize String   @default("58mm") @map("printer_paper_size") @db.VarChar(10)
   qrisMode         QrisMode @default(DYNAMIC) @map("qris_mode")
-  qrisStaticImage  String?  @map("qris_static_image") @db.Text
+  qrisStaticImage  String?  @map("qris_static_image") @db.LongText
+  qrisPureImage    String?  @map("qris_pure_image") @db.LongText
+  qrisPayload      String?  @map("qris_payload") @db.Text
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 

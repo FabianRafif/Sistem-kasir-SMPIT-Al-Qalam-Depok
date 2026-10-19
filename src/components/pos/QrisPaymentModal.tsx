@@ -189,7 +189,7 @@ export default function QrisPaymentModal({
   }, [status, activeTab, handleConfirmInflow, onClose]);
 
   // Gambar QRIS Toko saat Pembayaran Kasir: WAJIB HANYA KODE QR MURNI (bukan poster)
-  const qrisImageSrc = '/api/qris/image?view=pure';
+  const qrisImageSrc = storeSettings?.qrisPureImage || '/api/qris/image?view=pure';
 
   // =========================================================================
   // MODE 2: QRIS LAYAR KASIR (MODE LAYAR PENUH KHUSUS PEMBELI)
