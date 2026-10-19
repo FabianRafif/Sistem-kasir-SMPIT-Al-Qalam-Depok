@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import Image from 'next/image';
 import {
@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 
 export default function SettingsPage() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [storeName, setStoreName] = useState<string>('');
   const [schoolName, setSchoolName] = useState<string>('');
   const [address, setAddress] = useState<string>('');
@@ -31,6 +32,7 @@ export default function SettingsPage() {
   const [printerPaperSize, setPrinterPaperSize] = useState<'58mm' | '80mm'>('58mm');
   const [qrisMode, setQrisMode] = useState<'STATIC' | 'DYNAMIC'>('DYNAMIC');
   const [qrisStaticImage, setQrisStaticImage] = useState<string>('');
+  const [uploadingQris, setUploadingQris] = useState<boolean>(false);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -352,35 +354,45 @@ export default function SettingsPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-start gap-4 pt-1">
-              {/* Preview Box Foto QRIS Meja */}
-              <div className="w-36 h-48 sm:w-44 sm:h-56 bg-white rounded-xl border-2 border-dashed border-slate-300 p-2 flex flex-col items-center justify-center relative overflow-hidden shadow-2xs flex-shrink-0">
+              {/* Preview Box Foto QRIS Meja (Bentuk Kotak Khusus QR Code Murni) */}
+              <div className="w-48 h-48 sm:w-56 sm:h-56 bg-white rounded-2xl border-2 border-dashed border-slate-300 p-2.5 flex flex-col items-center justify-center relative overflow-hidden shadow-xs flex-shrink-0">
                 {qrisStaticImage ? (
                   <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={qrisStaticImage}
-                      alt="Stiker QRIS Meja Kasir"
-                      className="w-full h-full object-contain rounded-lg"
+                      alt="Kode QRIS Toko Murni"
+                      className="w-full h-full object-contain rounded-xl"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.includes('/qris-pure.png')) {
+                          target.src = '/qris-pure.png';
+                        }
+                      }}
                     />
+                    <div className="absolute bottom-1.5 left-2 right-2 bg-slate-900/90 backdrop-blur-xs text-white text-[10px] font-bold py-1 px-2 rounded-lg text-center truncate shadow-xs">
+                      Hanya Kode QR Murni
+                    </div>
                     <button
                       type="button"
                       onClick={() => {
                         setQrisStaticImage('');
-                        showNotice('warning', 'Foto QRIS meja telah dihapus. Jangan lupa klik "Simpan".');
+                        showNotice('warning', 'Foto QRIS telah dihapus. Jangan lupa klik "Simpan Pengaturan".');
                       }}
-                      className="absolute top-2 right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-md transition-transform hover:scale-110"
-                      title="Hapus foto QRIS meja"
+                      className="absolute top-2 right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full shadow-md transition-transform hover:scale-110 cursor-pointer"
+                      title="Hapus foto QRIS"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </>
                 ) : (
                   <div className="text-center p-3">
-                    <QrCode className="w-10 h-10 text-slate-300 mx-auto mb-1.5" />
+                    <QrCode className="w-12 h-12 text-slate-300 mx-auto mb-2" />
                     <span className="text-[11px] text-slate-500 font-semibold block">
-                      Belum ada foto stiker QRIS
+                      Belum ada kode QR
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      Klik tombol upload di samping
+                      Upload foto poster QRIS resmi
                     </span>
                   </div>
                 )}
@@ -388,69 +400,93 @@ export default function SettingsPage() {
 
               {/* Kontrol Upload & Informasi */}
               <div className="flex-1 space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-bold cursor-pointer shadow-xs transition-all">
-                    <Upload className="w-4 h-4" />
-                    <span>Upload Foto QRIS dari HP / Komputer</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          if (file.size > 5 * 1024 * 1024) {
-                            showNotice('error', 'Ukuran foto maksimal 5 MB.');
-                            return;
-                          }
+                <div className="flex flex-wrap gap-2.5 items-center">
+                  <input
+                    ref={fileInputRef}
+                    id="qris-file-upload-input"
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
 
-                          const formData = new FormData();
-                          formData.append('file', file);
+                      if (file.size > 10 * 1024 * 1024) {
+                        showNotice('error', 'Ukuran foto maksimal 10 MB.');
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                        return;
+                      }
 
-                          try {
-                            showNotice('success', 'Mengunggah foto QRIS toko...');
-                            const res = await fetch('/api/settings/upload-qris', {
-                              method: 'POST',
-                              body: formData,
-                            });
-                            const result = await res.json();
-                            if (res.ok && result.success) {
-                              setQrisStaticImage(result.url);
-                              setQrisMode('STATIC');
-                              showNotice('success', 'Foto QRIS toko berhasil disimpan dan langsung aktif di seluruh kasir!');
-                            } else {
-                              showNotice('error', result.error || 'Gagal mengunggah foto QRIS.');
-                            }
-                          } catch (err: any) {
-                            showNotice('error', err.message || 'Gagal memproses upload.');
-                          }
+                      const formData = new FormData();
+                      formData.append('file', file);
+
+                      setUploadingQris(true);
+                      showNotice('info', 'Sedang mengunggah dan mengekstrak kode QR murni dari poster...');
+
+                      try {
+                        const res = await fetch('/api/settings/upload-qris', {
+                          method: 'POST',
+                          body: formData,
+                        });
+                        const result = await res.json();
+                        if (res.ok && result.success) {
+                          setQrisStaticImage(result.url);
+                          setQrisMode('STATIC');
+                          showNotice('success', 'Kode QR murni berhasil diekstrak dan langsung terpasang untuk kasir!');
+                        } else {
+                          showNotice('error', result.error || 'Gagal mengunggah foto QRIS.');
                         }
-                      }}
-                    />
-                  </label>
+                      } catch (err: any) {
+                        showNotice('error', err.message || 'Gagal memproses upload.');
+                      } finally {
+                        setUploadingQris(false);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingQris}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 text-white rounded-xl text-xs font-bold cursor-pointer shadow-sm hover:shadow transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {uploadingQris ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>Mengekstrak Kode QR Murni...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        <span>Upload Foto QRIS dari HP / Komputer</span>
+                      </>
+                    )}
+                  </button>
 
                   <button
                     type="button"
                     onClick={() => {
                       setQrisStaticImage('/api/qris/image?t=' + Date.now());
                       setQrisMode('STATIC');
-                      showNotice('success', 'QRIS Toko resmi (GoPay / Meja) dipilih.');
+                      showNotice('success', 'Kode QR Murni resmi (GoPay / Jimpitan Digital) dipilih.');
                     }}
-                    className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold shadow-2xs transition-colors"
+                    className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                   >
-                    Gunakan QRIS Toko (GoPay / Meja)
+                    Gunakan QRIS Toko (GoPay / Jimpitan)
                   </button>
                 </div>
 
                 <div className="p-3 bg-brand-50 border border-brand-200 rounded-xl text-[11px] text-brand-900 space-y-1.5">
                   <div className="font-bold flex items-center gap-1.5">
-                    <span>💡 Cara Kerja QRIS Kertas Meja Kasir:</span>
+                    <span>💡 Cara Kerja Ekstraksi Otomatis Foto QRIS:</span>
                   </div>
                   <ol className="list-decimal pl-4 space-y-0.5 text-slate-700">
-                    <li>Stiker QRIS dicetak dan ditempel di meja kasir sekolah.</li>
-                    <li>Saat pembeli ingin bayar QRIS, kasir klik tombol <strong>Bayar QRIS (F9)</strong> di kasir.</li>
-                    <li>Sistem menampilkan total belanja di layar, dan pembeli memindai QRIS fisik di meja menggunakan aplikasi m-banking (BCA, Livin, BRImo, Dana, GoPay, ShopeePay).</li>
-                    <li>Sistem kasir secara otomatis mendeteksi notifikasi dana masuk, memutar suara pelunasan berbahasa Indonesia, mengurangi stok secara atomik, dan langsung mencetak struk belanja.</li>
+                    <li>Admin dapat mengunggah foto poster QRIS apa pun (seperti poster GoPay Merchant, BCA, Mandiri, dll).</li>
+                    <li>Sistem secara cerdas memotong dan mengambil <strong>hanya bagian kode QR-nya saja</strong>, membuang bingkai luar, header, dan logo bank.</li>
+                    <li>Hasil QR code murni tersebut otomatis dipakai di layar kasir (popup meja & mode layar penuh) sehingga pembeli bisa memindai dengan sangat cepat.</li>
                   </ol>
                 </div>
               </div>
