@@ -19,10 +19,12 @@ import {
   Image as ImageIcon,
   FileImage,
   Check,
+  ChevronDown,
 } from 'lucide-react';
 
 export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showBackupGuide, setShowBackupGuide] = useState<boolean>(false);
   const [storeName, setStoreName] = useState<string>('');
   const [schoolName, setSchoolName] = useState<string>('');
   const [address, setAddress] = useState<string>('');
@@ -526,18 +528,49 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* 4. INFORMASI BACKUP DATABASE & INTEGRITAS */}
-        <div className="bg-slate-900 text-slate-200 p-6 rounded-2xl shadow-sm space-y-3">
-          <div className="flex items-center gap-2 text-white">
-            <Database className="w-5 h-5 text-brand-400" />
-            <h4 className="text-sm font-bold">Prosedur Backup & Restore Database</h4>
-          </div>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            Database MySQL menggunakan engine <strong>InnoDB</strong> dengan relasi foreign key dan transaksi atomik ACID. Untuk menjalankan backup harian, gunakan perintah mysqldump berikut:
-          </p>
-          <div className="bg-black/50 p-3 rounded-lg font-mono text-[11px] text-emerald-400 select-all overflow-x-auto">
-            mysqldump -u root -p pos_smpit_alqalam &gt; backup_pos_alqalam_$(date +%Y%m%d).sql
-          </div>
+        {/* 4. INFORMASI BACKUP DATABASE & INTEGRITAS (COLLAPSIBLE DROPDOWN) */}
+        <div className="bg-slate-900 text-slate-200 rounded-2xl shadow-sm border border-slate-800 overflow-hidden transition-all">
+          <button
+            type="button"
+            onClick={() => setShowBackupGuide(!showBackupGuide)}
+            className="w-full p-4 flex items-center justify-between text-left hover:bg-slate-800/60 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5">
+              <Database className="w-4 h-4 text-brand-400 shrink-0" />
+              <div>
+                <h4 className="text-xs font-bold text-white">
+                  Prosedur Backup & Restore Database
+                </h4>
+                <p className="text-[11px] text-slate-400">
+                  Panduan perintah pencadangan data (Khusus Tim IT / Opsional)
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md border border-slate-700 hidden sm:inline-block">
+                {showBackupGuide ? 'Tutup Panduan' : 'Lihat Panduan'}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                  showBackupGuide ? 'rotate-180' : ''
+                }`}
+              />
+            </div>
+          </button>
+
+          {showBackupGuide && (
+            <div className="px-5 pb-5 pt-1 space-y-3 border-t border-slate-800/80 bg-slate-950/40">
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Database MySQL menggunakan engine <strong>InnoDB</strong> dengan relasi foreign key dan transaksi atomik ACID. Untuk menjalankan backup harian, gunakan perintah mysqldump berikut:
+              </p>
+              <div className="bg-black/60 p-3 rounded-lg font-mono text-[11px] text-emerald-400 select-all overflow-x-auto border border-emerald-950/40">
+                mysqldump -u root -p pos_smpit_alqalam &gt; backup_pos_alqalam_$(date +%Y%m%d).sql
+              </div>
+              <p className="text-[10px] text-slate-500 italic">
+                *Catatan: Sistem ini sudah terhubung ke database Cloud AWS secara aman. Panduan ini hanya digunakan jika Anda membutuhkan salinan file database fisik secara mandiri.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* TOMBOL SIMPAN */}
