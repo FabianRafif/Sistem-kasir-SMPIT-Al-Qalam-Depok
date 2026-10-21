@@ -709,8 +709,8 @@ export default function PosPage() {
               </div>
 
               {/* TOTAL AKHIR (TABULAR ANGKA BESAR) */}
-              <div className="bg-slate-900 text-white rounded-xl p-4 text-center mt-3 shadow-inner">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+              <div className="bg-gradient-to-br from-brand-900 to-[#075985] text-white rounded-xl p-4 text-center mt-3 shadow-md border border-brand-700/50">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-brand-200">
                   Total Tagihan Kasir
                 </span>
                 <div className="text-3xl font-black font-mono tabular-nums text-white mt-1">

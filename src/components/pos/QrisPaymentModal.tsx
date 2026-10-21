@@ -236,8 +236,8 @@ export default function QrisPaymentModal({
           )}
 
           {/* Nominal Tagihan Besar & Jelas untuk Pembeli */}
-          <div className="w-full bg-slate-900/90 border border-slate-800 rounded-2xl py-3 px-6 shadow-xl">
-            <span className="text-[11px] font-bold text-brand-300 uppercase tracking-widest block mb-1">
+          <div className="w-full bg-gradient-to-br from-brand-900 to-[#075985] border border-brand-700/60 rounded-2xl py-3 px-6 shadow-xl">
+            <span className="text-[11px] font-bold text-brand-200 uppercase tracking-widest block mb-1">
               Total Tagihan Belanja
             </span>
             <div className="text-4xl sm:text-5xl font-black text-white font-mono tabular-nums tracking-tight">
