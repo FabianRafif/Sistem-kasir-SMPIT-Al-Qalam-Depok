@@ -150,8 +150,21 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-center text-[11px] text-slate-400 font-medium">
-          Sistem Point of Sale Resmi SMPIT Al Qalam • Versi 1.0
+        <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 text-center space-y-1">
+          <p className="text-[11px] text-slate-500 font-medium">
+            Sistem Point of Sale Resmi SMPIT Al Qalam • Versi 1.0
+          </p>
+          <p className="text-[11px] text-slate-400 font-medium">
+            Dikembangkan oleh <span className="font-semibold text-slate-600">Fabian R.A</span> • Bantuan Teknis:{' '}
+            <a
+              href="https://wa.me/62895322465836"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-600 hover:text-brand-700 hover:underline font-bold transition-colors inline-block"
+            >
+              0895-3224-65836
+            </a>
+          </p>
         </div>
       </div>
     </div>
